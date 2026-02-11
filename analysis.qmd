@@ -1,0 +1,374 @@
+---
+title: "Binance Gold & Silver Perpetuals and ETF Markets"
+author: "KSE Python course project"
+format:
+  html:
+    df-print: paged
+  pdf:
+    documentclass: article
+jupyter: python3
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## 1. Introduction and research question
+
+**Research question.**  
+Did the introduction of Binance TRADFI gold and silver perpetual futures change volatility, liquidity and price integration in the corresponding precious metal ETF markets (GLD and SLV)?
+
+**Main hypotheses.**
+
+- **H1 (volatility)**: Realized volatility of gold and silver ETFs increased after the launch of Binance XAUUSDT and XAGUSDT TRADFI perpetual futures.
+- **H2 (liquidity)**: Trading activity and liquidity of GLD and SLV improved (higher volume, lower Amihud illiquidity) after the launch.
+- **H3 (integration)**: Short‑run price co‑movement and beta of GLD/SLV with Binance XAUUSDT/XAGUSDT returns increased after the launch.
+
+## 2. Data and feature set
+
+This section loads the pre‑built daily feature dataset `data/processed/features_daily.csv`.  
+Raw data sources and feature definitions are described in `DATA_DESCRIPTION.md` and `VARIABLES_DESCRIPTION.md`.
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.style.use("seaborn-v0_8")
+
+# Load features (note: the date column is named 'Date' in the CSV)
+df = pd.read_csv("data/processed/features_daily.csv", parse_dates=["Date"])
+df = df.set_index("Date").sort_index()
+
+df.shape
+```
+
+```{python}
+df.head()
+```
+
+### 2.1 Basic cleaning and event date
+
+We define the main event date as the launch of Binance XAUUSDT TRADFI perpetual futures (2026‑01‑05).  
+To keep a meaningful pre‑event window, we only require that ETF prices and returns are available; Binance‑specific fields are allowed to be missing before the launch.
+
+```{python}
+event_date = pd.Timestamp("2026-01-05")
+
+# Require only ETF prices/returns (pre‑event we do not have Binance data)
+core_cols = ["px_gld_close", "px_slv_close", "ret_gld", "ret_slv"]
+df_core = df.dropna(subset=core_cols).copy()
+
+df_core["post_event"] = (df_core.index >= event_date).astype(int)
+
+df_core.info()
+```
+
+```{python}
+df_core[["post_event"]].value_counts().sort_index()
+```
+
+## 3. Descriptive statistics
+
+### 3.1 Prices and returns
+
+```{python}
+fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+
+# ETF prices
+axes[0].plot(df_core.index, df_core["px_gld_close"], label="GLD close")
+axes[0].plot(df_core.index, df_core["px_slv_close"], label="SLV close")
+axes[0].axvline(event_date, color="red", linestyle="--", label="Event date")
+axes[0].set_ylabel("Price")
+axes[0].set_title("GLD and SLV prices")
+axes[0].legend()
+
+# Binance aggregated close prices
+axes[1].plot(df_core.index, df_core["px_xau_binance_close"], label="XAUUSDT close")
+axes[1].plot(df_core.index, df_core["px_xag_binance_close"], label="XAGUSDT close")
+axes[1].axvline(event_date, color="red", linestyle="--", label="Event date")
+axes[1].set_ylabel("Price")
+axes[1].set_title("Binance TRADFI gold and silver futures (daily close)")
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+returns_cols = ["ret_gld", "ret_slv", "ret_xau_binance", "ret_xag_binance"]
+df_core[returns_cols].describe().T[["mean", "std", "min", "max"]]
+```
+
+### 3.2 Volatility and liquidity over time
+
+We look at 20‑day realized volatility for GLD and SLV and ETF trading volume.
+
+```{python}
+fig, axes = plt.subplots(3, 1, figsize=(10, 9), sharex=True)
+
+axes[0].plot(df_core.index, df_core["vol_realized_20_ret_gld"], label="GLD 20d vol")
+axes[0].plot(df_core.index, df_core["vol_realized_20_ret_slv"], label="SLV 20d vol")
+axes[0].axvline(event_date, color="red", linestyle="--")
+axes[0].set_title("Realized 20‑day volatility (GLD, SLV)")
+axes[0].legend()
+
+axes[1].plot(df_core.index, df_core["vol_parkinson_gld"], label="GLD Parkinson vol")
+axes[1].plot(df_core.index, df_core["vol_parkinson_slv"], label="SLV Parkinson vol")
+axes[1].axvline(event_date, color="red", linestyle="--")
+axes[1].set_title("Parkinson volatility (GLD, SLV)")
+axes[1].legend()
+
+if "vol_gld" in df_core.columns and "vol_slv" in df_core.columns:
+    axes[2].plot(df_core.index, df_core["vol_gld"], label="GLD volume")
+    axes[2].plot(df_core.index, df_core["vol_slv"], label="SLV volume")
+    axes[2].axvline(event_date, color="red", linestyle="--")
+    axes[2].set_title("ETF trading volume")
+    axes[2].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+liq_cols = []
+for c in ["amihud_gld", "amihud_20_gld", "amihud_slv", "amihud_20_slv"]:
+    if c in df_core.columns:
+        liq_cols.append(c)
+
+df_core[liq_cols].describe().T[["mean", "std", "min", "max"]]
+```
+
+### 3.3 Correlogram
+
+We compute the correlation matrix for a set of variables that are meaningful for the analysis: returns, volatility measures, integration (rolling correlation/beta), liquidity proxies, controls and the event dummy. Only numeric series with sufficient non-missing overlap are included.
+
+```{python}
+# Variables that make sense for correlation (numeric, interpretable)
+corr_candidates = [
+    "ret_gld", "ret_slv", "ret_xau_binance", "ret_xag_binance",
+    "vol_realized_20_ret_gld", "vol_realized_20_ret_slv",
+    "vol_realized_20_ret_xau_binance", "vol_realized_20_ret_xag_binance",
+    "vol_parkinson_gld", "vol_parkinson_slv",
+    "vol_parkinson_xau_binance", "vol_parkinson_xag_binance",
+    "corr_20_gld_xau", "corr_20_slv_xag",
+    "beta_60_gld_on_xau", "beta_60_slv_on_xag",
+    "vol_ratio_gld_xau", "vol_ratio_slv_xag",
+    "log_vol_gld", "log_vol_slv",
+    "amihud_gld", "amihud_slv", "amihud_20_gld", "amihud_20_slv",
+    "dxy", "vix", "tnx", "dxy_ret", "vix_ret", "tnx_ret",
+    "post_event", "funding_xau", "funding_xag",
+]
+corr_cols = [c for c in corr_candidates if c in df_core.columns]
+corr_data = df_core[corr_cols].dropna(how="all", axis=1).dropna(how="any", axis=0)
+if corr_data.shape[0] < 5:
+    corr_data = df_core[corr_cols].dropna(how="all", axis=1)
+    corr_data = corr_data.dropna(axis=0, thresh=corr_data.shape[1] // 2)
+C = corr_data.corr()
+```
+
+```{python}
+# Short labels for readability
+short = {
+    "ret_gld": "ret GLD", "ret_slv": "ret SLV",
+    "ret_xau_binance": "ret XAU", "ret_xag_binance": "ret XAG",
+    "vol_realized_20_ret_gld": "vol20 GLD", "vol_realized_20_ret_slv": "vol20 SLV",
+    "vol_realized_20_ret_xau_binance": "vol20 XAU", "vol_realized_20_ret_xag_binance": "vol20 XAG",
+    "vol_parkinson_gld": "Park GLD", "vol_parkinson_slv": "Park SLV",
+    "vol_parkinson_xau_binance": "Park XAU", "vol_parkinson_xag_binance": "Park XAG",
+    "corr_20_gld_xau": "corr GLD-XAU", "corr_20_slv_xag": "corr SLV-XAG",
+    "beta_60_gld_on_xau": "beta GLD/XAU", "beta_60_slv_on_xag": "beta SLV/XAG",
+    "vol_ratio_gld_xau": "vol ratio G/X", "vol_ratio_slv_xag": "vol ratio S/X",
+    "log_vol_gld": "log vol GLD", "log_vol_slv": "log vol SLV",
+    "amihud_gld": "Amihud GLD", "amihud_slv": "Amihud SLV",
+    "amihud_20_gld": "Amihud20 GLD", "amihud_20_slv": "Amihud20 SLV",
+    "dxy": "DXY", "vix": "VIX", "tnx": "TNX",
+    "dxy_ret": "DXY ret", "vix_ret": "VIX ret", "tnx_ret": "TNX ret",
+    "post_event": "post_event", "funding_xau": "fund XAU", "funding_xag": "fund XAG",
+}
+C_plot = C.rename(index=short, columns=short)
+fig, ax = plt.subplots(figsize=(14, 12))
+sns.heatmap(
+    C_plot,
+    cmap="RdBu_r",
+    center=0,
+    vmin=-1,
+    vmax=1,
+    square=True,
+    linewidths=0.3,
+    ax=ax,
+    annot=False,
+)
+ax.set_title("Correlogram: returns, volatility, integration, liquidity, controls")
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Summary: variables most correlated with post_event (if any)
+if "post_event" in C.columns:
+    post_corr = C["post_event"].drop("post_event", errors="ignore")
+    post_corr = post_corr.reindex(post_corr.abs().sort_values(ascending=False).index)
+    post_corr.head(12)
+```
+
+## 4. Event‑study style comparison
+
+We compare average volatility, volume and integration measures before and after the futures launch.
+
+```{python}
+def summarize_pre_post(series: pd.Series, label: str) -> pd.DataFrame:
+    pre = series[df_core["post_event"] == 0].dropna()
+    post = series[df_core["post_event"] == 1].dropna()
+    return pd.DataFrame(
+        {
+            "metric": [label, label],
+            "period": ["pre", "post"],
+            "mean": [pre.mean(), post.mean()],
+            "std": [pre.std(), post.std()],
+            "n": [pre.shape[0], post.shape[0]],
+        }
+    )
+
+rows = []
+rows.append(summarize_pre_post(df_core["vol_realized_20_ret_gld"], "GLD 20d vol"))
+rows.append(summarize_pre_post(df_core["vol_realized_20_ret_slv"], "SLV 20d vol"))
+rows.append(summarize_pre_post(df_core["vol_parkinson_gld"], "GLD Parkinson vol"))
+rows.append(summarize_pre_post(df_core["vol_parkinson_slv"], "SLV Parkinson vol"))
+if "vol_gld" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["vol_gld"], "GLD volume"))
+if "vol_slv" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["vol_slv"], "SLV volume"))
+if "corr_20_gld_xau" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["corr_20_gld_xau"], "corr_20_gld_xau"))
+if "corr_20_slv_xag" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["corr_20_slv_xag"], "corr_20_slv_xag"))
+
+summary_pre_post = pd.concat(rows, ignore_index=True)
+summary_pre_post
+```
+
+For a more formal comparison we can run simple t‑tests.
+
+```{python}
+from scipy import stats
+
+def ttest_pre_post(series: pd.Series) -> dict:
+    pre = series[df_core["post_event"] == 0].dropna()
+    post = series[df_core["post_event"] == 1].dropna()
+    if len(pre) < 3 or len(post) < 3:
+        return {"t_stat": np.nan, "p_value": np.nan}
+    t_stat, p_val = stats.ttest_ind(post, pre, equal_var=False)
+    return {"t_stat": t_stat, "p_value": p_val}
+
+metrics = {
+    "vol_realized_20_ret_gld": "GLD 20d vol",
+    "vol_realized_20_ret_slv": "SLV 20d vol",
+    "vol_parkinson_gld": "GLD Parkinson vol",
+    "vol_parkinson_slv": "SLV Parkinson vol",
+    "vol_gld": "GLD volume",
+    "vol_slv": "SLV volume",
+    "corr_20_gld_xau": "corr_20_gld_xau",
+    "corr_20_slv_xag": "corr_20_slv_xag",
+}
+
+tt_rows = []
+for col, label in metrics.items():
+    if col in df_core.columns:
+        res = ttest_pre_post(df_core[col])
+        tt_rows.append(
+            {"metric": label, "t_stat": res["t_stat"], "p_value": res["p_value"]}
+        )
+
+tt_results = pd.DataFrame(tt_rows)
+tt_results
+```
+
+## 5. Simple regression models
+
+We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns.
+
+```{python}
+import statsmodels.api as sm
+
+reg_df = df_core.copy()
+
+reg_cols = [
+    "vol_realized_20_ret_gld",
+    "vol_realized_20_ret_slv",
+    "dxy_ret",
+    "vix_ret",
+    "tnx_ret",
+    "post_event",
+]
+
+reg_df_reg = reg_df[reg_cols].dropna()
+reg_df_reg.head()
+```
+
+```{python}
+def run_ols(y_col: str, x_cols: list, data: pd.DataFrame):
+    """
+    Run a simple OLS regression if there are enough observations.
+    Returns a fitted model or None.
+    """
+    sub = data[[y_col] + x_cols].dropna()
+    if sub.shape[0] < 10:
+        print(f"Not enough non-missing observations for {y_col} (n={sub.shape[0]}). Skipping regression.")
+        return None
+    y = sub[y_col]
+    X = sm.add_constant(sub[x_cols])
+    model = sm.OLS(y, X, missing="drop")
+    return model.fit()
+
+model_gld_vol = run_ols(
+    "vol_realized_20_ret_gld",
+    ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
+    reg_df,
+)
+model_slv_vol = run_ols(
+    "vol_realized_20_ret_slv",
+    ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
+    reg_df,
+)
+
+if model_gld_vol is not None:
+    print(model_gld_vol.summary().tables[1])
+    print()
+if model_slv_vol is not None:
+    print(model_slv_vol.summary().tables[1])
+```
+
+If needed, we can also model absolute returns as a simple proxy for volatility:
+
+```{python}
+if "ret_gld_abs" in reg_df.columns and "ret_slv_abs" in reg_df.columns:
+    model_gld_abs = run_ols(
+        "ret_gld_abs",
+        ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
+        reg_df,
+    )
+    model_slv_abs = run_ols(
+        "ret_slv_abs",
+        ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
+        reg_df,
+    )
+
+    if model_gld_abs is not None:
+        print(model_gld_abs.summary().tables[1])
+        print()
+    if model_slv_abs is not None:
+        print(model_slv_abs.summary().tables[1])
+```
+
+## 6. Interpretation and next steps
+
+- Use the **pre/post summary table** and **t‑tests** to decide whether volatility, volume and integration measures changed after the event.  
+- Use **regression coefficients on `post_event`** to quantify the impact controlling for DXY, VIX and 10Y yield changes.  
+- Based on these results, you can write the Empirical Results and Discussion sections of the report, focusing on:
+  - sign and significance of the `post_event` coefficient,
+  - whether integration metrics (`corr_20`, `beta_60`) increased,
+  - whether liquidity improved or worsened.
+

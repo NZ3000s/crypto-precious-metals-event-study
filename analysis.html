@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.23">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="KSE Python course project">
+
+<title>Binance Gold &amp; Silver Perpetuals and ETF Markets</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="analysis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="analysis_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="analysis_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="analysis_files/libs/quarto-html/popper.min.js"></script>
+<script src="analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="analysis_files/libs/quarto-html/anchor.min.js"></script>
+<link href="analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="analysis_files/libs/quarto-html/quarto-syntax-highlighting-226bd0f977fa82dfae4534cac220d79a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="analysis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="analysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="analysis_files/libs/bootstrap/bootstrap-be9206a58a27969b3ea3001da8f26fef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="analysis.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Binance Gold &amp; Silver Perpetuals and ETF Markets</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>KSE Python course project </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction-and-research-question" class="level2">
+<h2 class="anchored" data-anchor-id="introduction-and-research-question">1. Introduction and research question</h2>
+<p><strong>Research question.</strong><br>
+Did the introduction of Binance TRADFI gold and silver perpetual futures change volatility, liquidity and price integration in the corresponding precious metal ETF markets (GLD and SLV)?</p>
+<p><strong>Main hypotheses.</strong></p>
+<ul>
+<li><strong>H1 (volatility)</strong>: Realized volatility of gold and silver ETFs increased after the launch of Binance XAUUSDT and XAGUSDT TRADFI perpetual futures.</li>
+<li><strong>H2 (liquidity)</strong>: Trading activity and liquidity of GLD and SLV improved (higher volume, lower Amihud illiquidity) after the launch.</li>
+<li><strong>H3 (integration)</strong>: Short‑run price co‑movement and beta of GLD/SLV with Binance XAUUSDT/XAGUSDT returns increased after the launch.</li>
+</ul>
+</section>
+<section id="data-and-feature-set" class="level2">
+<h2 class="anchored" data-anchor-id="data-and-feature-set">2. Data and feature set</h2>
+<p>This section loads the pre‑built daily feature dataset <code>data/processed/features_daily.csv</code>.<br>
+Raw data sources and feature definitions are described in <code>DATA_DESCRIPTION.md</code> and <code>VARIABLES_DESCRIPTION.md</code>.</p>
+<div id="9c2fab6e" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">"seaborn-v0_8"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Load features (note: the date column is named 'Date' in the CSV)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">"data/processed/features_daily.csv"</span>, parse_dates<span class="op">=</span>[<span class="st">"Date"</span>])</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.set_index(<span class="st">"Date"</span>).sort_index()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>df.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>(112, 85)</code></pre>
+</div>
+</div>
+<div id="ff242e90" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">px_gld_open</th>
+<th data-quarto-table-cell-role="th">px_gld_high</th>
+<th data-quarto-table-cell-role="th">px_gld_low</th>
+<th data-quarto-table-cell-role="th">px_gld_close</th>
+<th data-quarto-table-cell-role="th">vol_gld</th>
+<th data-quarto-table-cell-role="th">px_slv_open</th>
+<th data-quarto-table-cell-role="th">px_slv_high</th>
+<th data-quarto-table-cell-role="th">px_slv_low</th>
+<th data-quarto-table-cell-role="th">px_slv_close</th>
+<th data-quarto-table-cell-role="th">vol_slv</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">amihud_20_slv</th>
+<th data-quarto-table-cell-role="th">funding_xau_change</th>
+<th data-quarto-table-cell-role="th">funding_extreme_xau</th>
+<th data-quarto-table-cell-role="th">oi_xau_change</th>
+<th data-quarto-table-cell-role="th">funding_xag_change</th>
+<th data-quarto-table-cell-role="th">funding_extreme_xag</th>
+<th data-quarto-table-cell-role="th">oi_xag_change</th>
+<th data-quarto-table-cell-role="th">dxy_ret</th>
+<th data-quarto-table-cell-role="th">vix_ret</th>
+<th data-quarto-table-cell-role="th">tnx_ret</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Date</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2025-09-02</td>
+<td>320.820007</td>
+<td>325.920013</td>
+<td>320.239990</td>
+<td>325.589996</td>
+<td>21247500.0</td>
+<td>36.630001</td>
+<td>37.169998</td>
+<td>36.430000</td>
+<td>37.150002</td>
+<td>35875300.0</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2025-09-03</td>
+<td>327.760010</td>
+<td>329.450012</td>
+<td>326.730011</td>
+<td>328.140015</td>
+<td>16062200.0</td>
+<td>37.330002</td>
+<td>37.639999</td>
+<td>37.180000</td>
+<td>37.340000</td>
+<td>27291200.0</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>-0.002646</td>
+<td>-0.048936</td>
+<td>-0.015552</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2025-09-04</td>
+<td>327.029999</td>
+<td>327.559998</td>
+<td>325.350006</td>
+<td>326.690002</td>
+<td>11703100.0</td>
+<td>37.200001</td>
+<td>37.220001</td>
+<td>36.630001</td>
+<td>36.930000</td>
+<td>45258500.0</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>0.002138</td>
+<td>-0.066375</td>
+<td>-0.008346</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2025-09-05</td>
+<td>329.529999</td>
+<td>331.440002</td>
+<td>328.929993</td>
+<td>331.049988</td>
+<td>16065200.0</td>
+<td>37.410000</td>
+<td>37.599998</td>
+<td>36.970001</td>
+<td>37.209999</td>
+<td>25435500.0</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>-0.005915</td>
+<td>-0.007874</td>
+<td>-0.021787</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2025-09-08</td>
+<td>333.660004</td>
+<td>335.670013</td>
+<td>333.230011</td>
+<td>334.820007</td>
+<td>18617300.0</td>
+<td>37.570000</td>
+<td>37.830002</td>
+<td>37.360001</td>
+<td>37.509998</td>
+<td>25019700.0</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>NaN</td>
+<td>-0.003278</td>
+<td>-0.004622</td>
+<td>-0.009838</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 85 columns</p>
+</div>
+</div>
+</div>
+<section id="basic-cleaning-and-event-date" class="level3">
+<h3 class="anchored" data-anchor-id="basic-cleaning-and-event-date">2.1 Basic cleaning and event date</h3>
+<p>We define the main event date as the launch of Binance XAUUSDT TRADFI perpetual futures (2026‑01‑05).<br>
+To keep a meaningful pre‑event window, we only require that ETF prices and returns are available; Binance‑specific fields are allowed to be missing before the launch.</p>
+<div id="ce16cc33" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>event_date <span class="op">=</span> pd.Timestamp(<span class="st">"2026-01-05"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Require only ETF prices/returns (pre‑event we do not have Binance data)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>core_cols <span class="op">=</span> [<span class="st">"px_gld_close"</span>, <span class="st">"px_slv_close"</span>, <span class="st">"ret_gld"</span>, <span class="st">"ret_slv"</span>]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>df_core <span class="op">=</span> df.dropna(subset<span class="op">=</span>core_cols).copy()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>df_core[<span class="st">"post_event"</span>] <span class="op">=</span> (df_core.index <span class="op">&gt;=</span> event_date).astype(<span class="bu">int</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>df_core.info()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+DatetimeIndex: 111 entries, 2025-09-03 to 2026-02-10
+Data columns (total 85 columns):
+ #   Column                           Non-Null Count  Dtype  
+---  ------                           --------------  -----  
+ 0   px_gld_open                      111 non-null    float64
+ 1   px_gld_high                      111 non-null    float64
+ 2   px_gld_low                       111 non-null    float64
+ 3   px_gld_close                     111 non-null    float64
+ 4   vol_gld                          111 non-null    float64
+ 5   px_slv_open                      111 non-null    float64
+ 6   px_slv_high                      111 non-null    float64
+ 7   px_slv_low                       111 non-null    float64
+ 8   px_slv_close                     111 non-null    float64
+ 9   vol_slv                          111 non-null    float64
+ 10  dxy                              111 non-null    float64
+ 11  vix                              111 non-null    float64
+ 12  tnx                              111 non-null    float64
+ 13  px_xau_binance_open              26 non-null     float64
+ 14  px_xau_binance_high              26 non-null     float64
+ 15  px_xau_binance_low               26 non-null     float64
+ 16  px_xau_binance_close             26 non-null     float64
+ 17  px_xau_binance_volume            26 non-null     float64
+ 18  px_xau_binance_num_trades        26 non-null     float64
+ 19  px_xag_binance_open              23 non-null     float64
+ 20  px_xag_binance_high              23 non-null     float64
+ 21  px_xag_binance_low               23 non-null     float64
+ 22  px_xag_binance_close             23 non-null     float64
+ 23  px_xag_binance_volume            23 non-null     float64
+ 24  px_xag_binance_num_trades        23 non-null     float64
+ 25  funding_xau                      22 non-null     float64
+ 26  funding_mark_xau                 22 non-null     float64
+ 27  funding_xag                      22 non-null     float64
+ 28  funding_mark_xag                 22 non-null     float64
+ 29  oi_xau                           0 non-null      float64
+ 30  oi_xag                           0 non-null      float64
+ 31  ret_xau_binance                  25 non-null     float64
+ 32  ret_xag_binance                  22 non-null     float64
+ 33  ret_gld                          111 non-null    float64
+ 34  ret_slv                          111 non-null    float64
+ 35  ret_xau_binance_abs              25 non-null     float64
+ 36  ret_xau_binance_sq               25 non-null     float64
+ 37  ret_xag_binance_abs              22 non-null     float64
+ 38  ret_xag_binance_sq               22 non-null     float64
+ 39  ret_gld_abs                      111 non-null    float64
+ 40  ret_gld_sq                       111 non-null    float64
+ 41  ret_slv_abs                      111 non-null    float64
+ 42  ret_slv_sq                       111 non-null    float64
+ 43  vol_realized_10_ret_xau_binance  16 non-null     float64
+ 44  vol_realized_20_ret_xau_binance  6 non-null      float64
+ 45  vol_realized_10_ret_xag_binance  13 non-null     float64
+ 46  vol_realized_20_ret_xag_binance  3 non-null      float64
+ 47  vol_realized_10_ret_gld          102 non-null    float64
+ 48  vol_realized_20_ret_gld          92 non-null     float64
+ 49  vol_realized_10_ret_slv          102 non-null    float64
+ 50  vol_realized_20_ret_slv          92 non-null     float64
+ 51  vol_parkinson_gld                93 non-null     float64
+ 52  vol_parkinson_slv                93 non-null     float64
+ 53  vol_parkinson_xau_binance        7 non-null      float64
+ 54  vol_parkinson_xag_binance        4 non-null      float64
+ 55  vol_gk_gld                       93 non-null     float64
+ 56  vol_gk_slv                       93 non-null     float64
+ 57  vol_gk_xau_binance               7 non-null      float64
+ 58  vol_gk_xag_binance               4 non-null      float64
+ 59  corr_20_gld_xau                  6 non-null      float64
+ 60  corr_20_slv_xag                  3 non-null      float64
+ 61  beta_60_gld_on_xau               0 non-null      float64
+ 62  beta_60_slv_on_xag               0 non-null      float64
+ 63  vol_ratio_gld_xau                6 non-null      float64
+ 64  vol_ratio_slv_xag                3 non-null      float64
+ 65  abs_return_gap_gld_xau           25 non-null     float64
+ 66  abs_return_gap_slv_xag           22 non-null     float64
+ 67  post_event                       111 non-null    int64  
+ 68  event_window_7                   111 non-null    int64  
+ 69  event_window_14                  111 non-null    int64  
+ 70  log_vol_gld                      111 non-null    float64
+ 71  log_vol_slv                      111 non-null    float64
+ 72  amihud_gld                       111 non-null    float64
+ 73  amihud_20_gld                    92 non-null     float64
+ 74  amihud_slv                       111 non-null    float64
+ 75  amihud_20_slv                    92 non-null     float64
+ 76  funding_xau_change               21 non-null     float64
+ 77  funding_extreme_xau              111 non-null    int64  
+ 78  oi_xau_change                    0 non-null      float64
+ 79  funding_xag_change               21 non-null     float64
+ 80  funding_extreme_xag              111 non-null    int64  
+ 81  oi_xag_change                    0 non-null      float64
+ 82  dxy_ret                          111 non-null    float64
+ 83  vix_ret                          111 non-null    float64
+ 84  tnx_ret                          111 non-null    float64
+dtypes: float64(80), int64(5)
+memory usage: 74.6 KB</code></pre>
+</div>
+</div>
+<div id="2b67b01e" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df_core[[<span class="st">"post_event"</span>]].value_counts().sort_index()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>post_event
+0             85
+1             26
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="descriptive-statistics" class="level2">
+<h2 class="anchored" data-anchor-id="descriptive-statistics">3. Descriptive statistics</h2>
+<section id="prices-and-returns" class="level3">
+<h3 class="anchored" data-anchor-id="prices-and-returns">3.1 Prices and returns</h3>
+<div id="ff901e07" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">7</span>), sharex<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ETF prices</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"px_gld_close"</span>], label<span class="op">=</span><span class="st">"GLD close"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"px_slv_close"</span>], label<span class="op">=</span><span class="st">"SLV close"</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, label<span class="op">=</span><span class="st">"Event date"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"Price"</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"GLD and SLV prices"</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend()</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Binance aggregated close prices</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"px_xau_binance_close"</span>], label<span class="op">=</span><span class="st">"XAUUSDT close"</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"px_xag_binance_close"</span>], label<span class="op">=</span><span class="st">"XAGUSDT close"</span>)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, label<span class="op">=</span><span class="st">"Event date"</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">"Price"</span>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Binance TRADFI gold and silver futures (daily close)"</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend()</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="f627db8f" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>returns_cols <span class="op">=</span> [<span class="st">"ret_gld"</span>, <span class="st">"ret_slv"</span>, <span class="st">"ret_xau_binance"</span>, <span class="st">"ret_xag_binance"</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df_core[returns_cols].describe().T[[<span class="st">"mean"</span>, <span class="st">"std"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">std</th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">ret_gld</td>
+<td>0.003160</td>
+<td>0.019440</td>
+<td>-0.108412</td>
+<td>0.061647</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">ret_slv</td>
+<td>0.006136</td>
+<td>0.048138</td>
+<td>-0.336037</td>
+<td>0.086602</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">ret_xau_binance</td>
+<td>0.005092</td>
+<td>0.034425</td>
+<td>-0.104457</td>
+<td>0.064529</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">ret_xag_binance</td>
+<td>0.002603</td>
+<td>0.106036</td>
+<td>-0.312222</td>
+<td>0.145629</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="volatility-and-liquidity-over-time" class="level3">
+<h3 class="anchored" data-anchor-id="volatility-and-liquidity-over-time">3.2 Volatility and liquidity over time</h3>
+<p>We look at 20‑day realized volatility for GLD and SLV and ETF trading volume.</p>
+<div id="377dcee5" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">3</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">9</span>), sharex<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"vol_realized_20_ret_gld"</span>], label<span class="op">=</span><span class="st">"GLD 20d vol"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"vol_realized_20_ret_slv"</span>], label<span class="op">=</span><span class="st">"SLV 20d vol"</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Realized 20‑day volatility (GLD, SLV)"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend()</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"vol_parkinson_gld"</span>], label<span class="op">=</span><span class="st">"GLD Parkinson vol"</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"vol_parkinson_slv"</span>], label<span class="op">=</span><span class="st">"SLV Parkinson vol"</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Parkinson volatility (GLD, SLV)"</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend()</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"vol_gld"</span> <span class="kw">in</span> df_core.columns <span class="kw">and</span> <span class="st">"vol_slv"</span> <span class="kw">in</span> df_core.columns:</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].plot(df_core.index, df_core[<span class="st">"vol_gld"</span>], label<span class="op">=</span><span class="st">"GLD volume"</span>)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].plot(df_core.index, df_core[<span class="st">"vol_slv"</span>], label<span class="op">=</span><span class="st">"SLV volume"</span>)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].set_title(<span class="st">"ETF trading volume"</span>)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].legend()</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="3db9392e" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>liq_cols <span class="op">=</span> []</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> c <span class="kw">in</span> [<span class="st">"amihud_gld"</span>, <span class="st">"amihud_20_gld"</span>, <span class="st">"amihud_slv"</span>, <span class="st">"amihud_20_slv"</span>]:</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> c <span class="kw">in</span> df_core.columns:</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        liq_cols.append(c)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>df_core[liq_cols].describe().T[[<span class="st">"mean"</span>, <span class="st">"std"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">std</th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">amihud_gld</td>
+<td>6.977909e-10</td>
+<td>5.506247e-10</td>
+<td>3.474315e-12</td>
+<td>2.390221e-09</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">amihud_20_gld</td>
+<td>6.709650e-10</td>
+<td>1.040833e-10</td>
+<td>4.831240e-10</td>
+<td>9.406983e-10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">amihud_slv</td>
+<td>4.710888e-10</td>
+<td>3.304889e-10</td>
+<td>1.153311e-12</td>
+<td>2.008110e-09</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">amihud_20_slv</td>
+<td>4.803576e-10</td>
+<td>1.172749e-10</td>
+<td>2.962718e-10</td>
+<td>7.452803e-10</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="correlogram" class="level3">
+<h3 class="anchored" data-anchor-id="correlogram">3.3 Correlogram</h3>
+<p>We compute the correlation matrix for a set of variables that are meaningful for the analysis: returns, volatility measures, integration (rolling correlation/beta), liquidity proxies, controls and the event dummy. Only numeric series with sufficient non-missing overlap are included.</p>
+<div id="f29847f9" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables that make sense for correlation (numeric, interpretable)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>corr_candidates <span class="op">=</span> [</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ret_gld"</span>, <span class="st">"ret_slv"</span>, <span class="st">"ret_xau_binance"</span>, <span class="st">"ret_xag_binance"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>, <span class="st">"vol_realized_20_ret_slv"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_xau_binance"</span>, <span class="st">"vol_realized_20_ret_xag_binance"</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_gld"</span>, <span class="st">"vol_parkinson_slv"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_xau_binance"</span>, <span class="st">"vol_parkinson_xag_binance"</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_gld_xau"</span>, <span class="st">"corr_20_slv_xag"</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"beta_60_gld_on_xau"</span>, <span class="st">"beta_60_slv_on_xag"</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_ratio_gld_xau"</span>, <span class="st">"vol_ratio_slv_xag"</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"log_vol_gld"</span>, <span class="st">"log_vol_slv"</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"amihud_gld"</span>, <span class="st">"amihud_slv"</span>, <span class="st">"amihud_20_gld"</span>, <span class="st">"amihud_20_slv"</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy"</span>, <span class="st">"vix"</span>, <span class="st">"tnx"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"post_event"</span>, <span class="st">"funding_xau"</span>, <span class="st">"funding_xag"</span>,</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>corr_cols <span class="op">=</span> [c <span class="cf">for</span> c <span class="kw">in</span> corr_candidates <span class="cf">if</span> c <span class="kw">in</span> df_core.columns]</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>corr_data <span class="op">=</span> df_core[corr_cols].dropna(how<span class="op">=</span><span class="st">"all"</span>, axis<span class="op">=</span><span class="dv">1</span>).dropna(how<span class="op">=</span><span class="st">"any"</span>, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> corr_data.shape[<span class="dv">0</span>] <span class="op">&lt;</span> <span class="dv">5</span>:</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    corr_data <span class="op">=</span> df_core[corr_cols].dropna(how<span class="op">=</span><span class="st">"all"</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    corr_data <span class="op">=</span> corr_data.dropna(axis<span class="op">=</span><span class="dv">0</span>, thresh<span class="op">=</span>corr_data.shape[<span class="dv">1</span>] <span class="op">//</span> <span class="dv">2</span>)</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>C <span class="op">=</span> corr_data.corr()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="e3dd3a8f" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Short labels for readability</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>short <span class="op">=</span> {</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ret_gld"</span>: <span class="st">"ret GLD"</span>, <span class="st">"ret_slv"</span>: <span class="st">"ret SLV"</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ret_xau_binance"</span>: <span class="st">"ret XAU"</span>, <span class="st">"ret_xag_binance"</span>: <span class="st">"ret XAG"</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>: <span class="st">"vol20 GLD"</span>, <span class="st">"vol_realized_20_ret_slv"</span>: <span class="st">"vol20 SLV"</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_xau_binance"</span>: <span class="st">"vol20 XAU"</span>, <span class="st">"vol_realized_20_ret_xag_binance"</span>: <span class="st">"vol20 XAG"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_gld"</span>: <span class="st">"Park GLD"</span>, <span class="st">"vol_parkinson_slv"</span>: <span class="st">"Park SLV"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_xau_binance"</span>: <span class="st">"Park XAU"</span>, <span class="st">"vol_parkinson_xag_binance"</span>: <span class="st">"Park XAG"</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_gld_xau"</span>: <span class="st">"corr GLD-XAU"</span>, <span class="st">"corr_20_slv_xag"</span>: <span class="st">"corr SLV-XAG"</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"beta_60_gld_on_xau"</span>: <span class="st">"beta GLD/XAU"</span>, <span class="st">"beta_60_slv_on_xag"</span>: <span class="st">"beta SLV/XAG"</span>,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_ratio_gld_xau"</span>: <span class="st">"vol ratio G/X"</span>, <span class="st">"vol_ratio_slv_xag"</span>: <span class="st">"vol ratio S/X"</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"log_vol_gld"</span>: <span class="st">"log vol GLD"</span>, <span class="st">"log_vol_slv"</span>: <span class="st">"log vol SLV"</span>,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"amihud_gld"</span>: <span class="st">"Amihud GLD"</span>, <span class="st">"amihud_slv"</span>: <span class="st">"Amihud SLV"</span>,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"amihud_20_gld"</span>: <span class="st">"Amihud20 GLD"</span>, <span class="st">"amihud_20_slv"</span>: <span class="st">"Amihud20 SLV"</span>,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy"</span>: <span class="st">"DXY"</span>, <span class="st">"vix"</span>: <span class="st">"VIX"</span>, <span class="st">"tnx"</span>: <span class="st">"TNX"</span>,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy_ret"</span>: <span class="st">"DXY ret"</span>, <span class="st">"vix_ret"</span>: <span class="st">"VIX ret"</span>, <span class="st">"tnx_ret"</span>: <span class="st">"TNX ret"</span>,</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"post_event"</span>: <span class="st">"post_event"</span>, <span class="st">"funding_xau"</span>: <span class="st">"fund XAU"</span>, <span class="st">"funding_xag"</span>: <span class="st">"fund XAG"</span>,</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>C_plot <span class="op">=</span> C.rename(index<span class="op">=</span>short, columns<span class="op">=</span>short)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">14</span>, <span class="dv">12</span>))</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>sns.heatmap(</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    C_plot,</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    cmap<span class="op">=</span><span class="st">"RdBu_r"</span>,</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    center<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    vmin<span class="op">=-</span><span class="dv">1</span>,</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    vmax<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    square<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    linewidths<span class="op">=</span><span class="fl">0.3</span>,</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    ax<span class="op">=</span>ax,</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    annot<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Correlogram: returns, volatility, integration, liquidity, controls"</span>)</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>plt.xticks(rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">"right"</span>)</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="b6011b34" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary: variables most correlated with post_event (if any)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"post_event"</span> <span class="kw">in</span> C.columns:</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    post_corr <span class="op">=</span> C[<span class="st">"post_event"</span>].drop(<span class="st">"post_event"</span>, errors<span class="op">=</span><span class="st">"ignore"</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    post_corr <span class="op">=</span> post_corr.reindex(post_corr.<span class="bu">abs</span>().sort_values(ascending<span class="op">=</span><span class="va">False</span>).index)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    post_corr.head(<span class="dv">12</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="eventstudy-style-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="eventstudy-style-comparison">4. Event‑study style comparison</h2>
+<p>We compare average volatility, volume and integration measures before and after the futures launch.</p>
+<div id="8d91b9b4" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> summarize_pre_post(series: pd.Series, label: <span class="bu">str</span>) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    pre <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">0</span>].dropna()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    post <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">1</span>].dropna()</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame(</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">"metric"</span>: [label, label],</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">"period"</span>: [<span class="st">"pre"</span>, <span class="st">"post"</span>],</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mean"</span>: [pre.mean(), post.mean()],</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">"std"</span>: [pre.std(), post.std()],</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">"n"</span>: [pre.shape[<span class="dv">0</span>], post.shape[<span class="dv">0</span>]],</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_realized_20_ret_gld"</span>], <span class="st">"GLD 20d vol"</span>))</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_realized_20_ret_slv"</span>], <span class="st">"SLV 20d vol"</span>))</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_parkinson_gld"</span>], <span class="st">"GLD Parkinson vol"</span>))</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_parkinson_slv"</span>], <span class="st">"SLV Parkinson vol"</span>))</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"vol_gld"</span> <span class="kw">in</span> df_core.columns:</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"vol_gld"</span>], <span class="st">"GLD volume"</span>))</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"vol_slv"</span> <span class="kw">in</span> df_core.columns:</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"vol_slv"</span>], <span class="st">"SLV volume"</span>))</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"corr_20_gld_xau"</span> <span class="kw">in</span> df_core.columns:</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"corr_20_gld_xau"</span>], <span class="st">"corr_20_gld_xau"</span>))</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"corr_20_slv_xag"</span> <span class="kw">in</span> df_core.columns:</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"corr_20_slv_xag"</span>], <span class="st">"corr_20_slv_xag"</span>))</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>summary_pre_post <span class="op">=</span> pd.concat(rows, ignore_index<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>summary_pre_post</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">metric</th>
+<th data-quarto-table-cell-role="th">period</th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">std</th>
+<th data-quarto-table-cell-role="th">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>GLD 20d vol</td>
+<td>pre</td>
+<td>1.343866e-02</td>
+<td>6.062648e-03</td>
+<td>66</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>GLD 20d vol</td>
+<td>post</td>
+<td>2.084301e-02</td>
+<td>8.844632e-03</td>
+<td>26</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>SLV 20d vol</td>
+<td>pre</td>
+<td>2.411353e-02</td>
+<td>6.133201e-03</td>
+<td>66</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>SLV 20d vol</td>
+<td>post</td>
+<td>5.884494e-02</td>
+<td>2.324772e-02</td>
+<td>26</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>GLD Parkinson vol</td>
+<td>pre</td>
+<td>8.671084e-03</td>
+<td>1.418413e-03</td>
+<td>67</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>GLD Parkinson vol</td>
+<td>post</td>
+<td>1.181838e-02</td>
+<td>5.792720e-03</td>
+<td>26</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>SLV Parkinson vol</td>
+<td>pre</td>
+<td>1.625328e-02</td>
+<td>2.567734e-03</td>
+<td>67</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>SLV Parkinson vol</td>
+<td>post</td>
+<td>3.233210e-02</td>
+<td>1.407079e-02</td>
+<td>26</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>GLD volume</td>
+<td>pre</td>
+<td>1.512372e+07</td>
+<td>9.048477e+06</td>
+<td>85</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>GLD volume</td>
+<td>post</td>
+<td>2.534337e+07</td>
+<td>1.859671e+07</td>
+<td>26</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>SLV volume</td>
+<td>pre</td>
+<td>4.388922e+07</td>
+<td>2.724932e+07</td>
+<td>85</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>SLV volume</td>
+<td>post</td>
+<td>1.591018e+08</td>
+<td>1.001239e+08</td>
+<td>26</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>corr_20_gld_xau</td>
+<td>pre</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
+<td>corr_20_gld_xau</td>
+<td>post</td>
+<td>9.213689e-01</td>
+<td>1.339276e-02</td>
+<td>6</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">14</td>
+<td>corr_20_slv_xag</td>
+<td>pre</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>corr_20_slv_xag</td>
+<td>post</td>
+<td>9.354342e-01</td>
+<td>2.670531e-03</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>For a more formal comparison we can run simple t‑tests.</p>
+<div id="e9e85feb" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy <span class="im">import</span> stats</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ttest_pre_post(series: pd.Series) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    pre <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">0</span>].dropna()</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    post <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">1</span>].dropna()</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(pre) <span class="op">&lt;</span> <span class="dv">3</span> <span class="kw">or</span> <span class="bu">len</span>(post) <span class="op">&lt;</span> <span class="dv">3</span>:</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {<span class="st">"t_stat"</span>: np.nan, <span class="st">"p_value"</span>: np.nan}</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    t_stat, p_val <span class="op">=</span> stats.ttest_ind(post, pre, equal_var<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">"t_stat"</span>: t_stat, <span class="st">"p_value"</span>: p_val}</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> {</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>: <span class="st">"GLD 20d vol"</span>,</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_slv"</span>: <span class="st">"SLV 20d vol"</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_gld"</span>: <span class="st">"GLD Parkinson vol"</span>,</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_slv"</span>: <span class="st">"SLV Parkinson vol"</span>,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_gld"</span>: <span class="st">"GLD volume"</span>,</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_slv"</span>: <span class="st">"SLV volume"</span>,</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_gld_xau"</span>: <span class="st">"corr_20_gld_xau"</span>,</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_slv_xag"</span>: <span class="st">"corr_20_slv_xag"</span>,</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>tt_rows <span class="op">=</span> []</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> col, label <span class="kw">in</span> metrics.items():</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> col <span class="kw">in</span> df_core.columns:</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        res <span class="op">=</span> ttest_pre_post(df_core[col])</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        tt_rows.append(</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>            {<span class="st">"metric"</span>: label, <span class="st">"t_stat"</span>: res[<span class="st">"t_stat"</span>], <span class="st">"p_value"</span>: res[<span class="st">"p_value"</span>]}</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>tt_results <span class="op">=</span> pd.DataFrame(tt_rows)</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>tt_results</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">metric</th>
+<th data-quarto-table-cell-role="th">t_stat</th>
+<th data-quarto-table-cell-role="th">p_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>GLD 20d vol</td>
+<td>3.921186</td>
+<td>3.965328e-04</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>SLV 20d vol</td>
+<td>7.515452</td>
+<td>5.090965e-08</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>GLD Parkinson vol</td>
+<td>2.738718</td>
+<td>1.095236e-02</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>SLV Parkinson vol</td>
+<td>5.789406</td>
+<td>4.466060e-06</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>GLD volume</td>
+<td>2.705857</td>
+<td>1.134125e-02</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>SLV volume</td>
+<td>5.802084</td>
+<td>4.025468e-06</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>corr_20_gld_xau</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>corr_20_slv_xag</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="simple-regression-models" class="level2">
+<h2 class="anchored" data-anchor-id="simple-regression-models">5. Simple regression models</h2>
+<p>We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns.</p>
+<div id="b1255cc1" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.api <span class="im">as</span> sm</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>reg_df <span class="op">=</span> df_core.copy()</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>reg_cols <span class="op">=</span> [</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>,</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_slv"</span>,</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy_ret"</span>,</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vix_ret"</span>,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tnx_ret"</span>,</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"post_event"</span>,</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>reg_df_reg <span class="op">=</span> reg_df[reg_cols].dropna()</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>reg_df_reg.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">vol_realized_20_ret_gld</th>
+<th data-quarto-table-cell-role="th">vol_realized_20_ret_slv</th>
+<th data-quarto-table-cell-role="th">dxy_ret</th>
+<th data-quarto-table-cell-role="th">vix_ret</th>
+<th data-quarto-table-cell-role="th">tnx_ret</th>
+<th data-quarto-table-cell-role="th">post_event</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Date</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2025-09-30</td>
+<td>0.007630</td>
+<td>0.013341</td>
+<td>-0.001431</td>
+<td>0.009877</td>
+<td>0.001689</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2025-10-01</td>
+<td>0.007610</td>
+<td>0.013404</td>
+<td>-0.000614</td>
+<td>0.000614</td>
+<td>-0.010177</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2025-10-02</td>
+<td>0.007558</td>
+<td>0.013260</td>
+<td>0.001432</td>
+<td>0.020657</td>
+<td>-0.004393</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2025-10-03</td>
+<td>0.007311</td>
+<td>0.013733</td>
+<td>-0.001329</td>
+<td>0.001202</td>
+<td>0.007555</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2025-10-06</td>
+<td>0.007869</td>
+<td>0.013770</td>
+<td>0.003983</td>
+<td>-0.016960</td>
+<td>0.010385</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="23b4fcdf" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_ols(y_col: <span class="bu">str</span>, x_cols: <span class="bu">list</span>, data: pd.DataFrame):</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Run a simple OLS regression if there are enough observations.</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns a fitted model or None.</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">=</span> data[[y_col] <span class="op">+</span> x_cols].dropna()</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> sub.shape[<span class="dv">0</span>] <span class="op">&lt;</span> <span class="dv">10</span>:</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Not enough non-missing observations for </span><span class="sc">{</span>y_col<span class="sc">}</span><span class="ss"> (n=</span><span class="sc">{</span>sub<span class="sc">.</span>shape[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">). Skipping regression."</span>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> sub[y_col]</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> sm.add_constant(sub[x_cols])</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> sm.OLS(y, X, missing<span class="op">=</span><span class="st">"drop"</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit()</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>model_gld_vol <span class="op">=</span> run_ols(</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>,</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    reg_df,</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>model_slv_vol <span class="op">=</span> run_ols(</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_slv"</span>,</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    reg_df,</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> model_gld_vol <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(model_gld_vol.summary().tables[<span class="dv">1</span>])</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>()</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> model_slv_vol <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(model_slv_vol.summary().tables[<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>==============================================================================
+                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const          0.0134      0.001     15.519      0.000       0.012       0.015
+post_event     0.0075      0.002      4.600      0.000       0.004       0.011
+dxy_ret        0.2238      0.236      0.947      0.346      -0.246       0.694
+vix_ret        0.0036      0.009      0.383      0.703      -0.015       0.022
+tnx_ret       -0.0053      0.093     -0.057      0.955      -0.189       0.179
+==============================================================================
+
+==============================================================================
+                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const          0.0241      0.002     14.512      0.000       0.021       0.027
+post_event     0.0350      0.003     11.148      0.000       0.029       0.041
+dxy_ret        0.3997      0.454      0.881      0.381      -0.502       1.301
+vix_ret       -0.0017      0.018     -0.095      0.924      -0.037       0.034
+tnx_ret       -0.0560      0.178     -0.315      0.753      -0.409       0.297
+==============================================================================</code></pre>
+</div>
+</div>
+<p>If needed, we can also model absolute returns as a simple proxy for volatility:</p>
+<div id="fe78d443" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"ret_gld_abs"</span> <span class="kw">in</span> reg_df.columns <span class="kw">and</span> <span class="st">"ret_slv_abs"</span> <span class="kw">in</span> reg_df.columns:</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    model_gld_abs <span class="op">=</span> run_ols(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ret_gld_abs"</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        reg_df,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    model_slv_abs <span class="op">=</span> run_ols(</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ret_slv_abs"</span>,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>        [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        reg_df,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> model_gld_abs <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(model_gld_abs.summary().tables[<span class="dv">1</span>])</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>()</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> model_slv_abs <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(model_slv_abs.summary().tables[<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>==============================================================================
+                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const          0.0097      0.002      6.238      0.000       0.007       0.013
+post_event     0.0124      0.003      3.842      0.000       0.006       0.019
+dxy_ret        0.6160      0.433      1.422      0.158      -0.243       1.475
+vix_ret        0.0068      0.018      0.370      0.712      -0.030       0.043
+tnx_ret       -0.0439      0.171     -0.257      0.798      -0.383       0.295
+==============================================================================
+
+==============================================================================
+                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const          0.0211      0.004      5.582      0.000       0.014       0.029
+post_event     0.0379      0.008      4.838      0.000       0.022       0.053
+dxy_ret        2.0522      1.050      1.954      0.053      -0.030       4.134
+vix_ret        0.0416      0.045      0.933      0.353      -0.047       0.130
+tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
+==============================================================================</code></pre>
+</div>
+</div>
+</section>
+<section id="interpretation-and-next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="interpretation-and-next-steps">6. Interpretation and next steps</h2>
+<ul>
+<li>Use the <strong>pre/post summary table</strong> and <strong>t‑tests</strong> to decide whether volatility, volume and integration measures changed after the event.<br>
+</li>
+<li>Use <strong>regression coefficients on <code>post_event</code></strong> to quantify the impact controlling for DXY, VIX and 10Y yield changes.<br>
+</li>
+<li>Based on these results, you can write the Empirical Results and Discussion sections of the report, focusing on:
+<ul>
+<li>sign and significance of the <code>post_event</code> coefficient,</li>
+<li>whether integration metrics (<code>corr_20</code>, <code>beta_60</code>) increased,</li>
+<li>whether liquidity improved or worsened.</li>
+</ul></li>
+</ul>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
