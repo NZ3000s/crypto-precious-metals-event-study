@@ -16,9 +16,6 @@ import os
 import time
 from datetime import datetime, timezone
 from typing import List, Dict, Any
-import ssl
-import urllib.error
-
 import requests
 import pandas as pd
 import yfinance as yf
@@ -223,15 +220,19 @@ def download_yfinance_block() -> None:
 
 
 # ---------------------------------------------------------------------
-# 3. FRED (DGS10)
+# 3. FRED (DGS10) — use REST API via requests to avoid SSL issues with urllib on macOS
 # ---------------------------------------------------------------------
 
+FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"
+
+
 def download_fred_block() -> None:
-    api_key = os.getenv("FRED_API_KEY")
-    if not api_key:
+    api_key = (os.getenv("FRED_API_KEY") or "").strip()
+    if not api_key or api_key.lower() in ("your_key_here", "xxx", "api_key"):
         print("=== FRED (skipped) ===")
-        print("  FRED_API_KEY is not set in environment variables.")
-        print("  If you want to download DGS10, run export FRED_API_KEY=... and rerun.")
+        print("  FRED_API_KEY is not set or is a placeholder.")
+        print("  Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html")
+        print("  then run: export FRED_API_KEY=your_actual_key")
         return
 
     out_path = os.path.join(DATA_DIR, "fred_dgs10_daily.csv")
@@ -241,28 +242,33 @@ def download_fred_block() -> None:
         return
 
     print("=== FRED DGS10 ===")
-    try:
-        from fredapi import Fred
-    except ImportError:
-        print("  fredapi is not installed (pip install fredapi). Skipping.")
-        return
-
-    fred = Fred(api_key=api_key)
     series_id = "DGS10"
+    params = {
+        "series_id": series_id,
+        "api_key": api_key,
+        "file_type": "json",
+    }
     try:
-        s = fred.get_series(series_id)
-    except (urllib.error.URLError, ssl.SSLCertVerificationError) as e:
-        print("  Could not download DGS10 from FRED due to SSL/certificate error:")
-        print(f"    {e}")
-        print("  This does not affect Binance/ETF data; you can either fix macOS certificates")
-        print("  or rely on DXY/VIX/TNX from yfinance as a control.")
+        resp = requests.get(FRED_BASE, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.RequestException as e:
+        print(f"  Could not download DGS10 from FRED: {e}")
         return
     except Exception as e:
         print(f"  Unexpected error while downloading DGS10: {e}")
         return
 
-    df = s.to_frame(name=series_id)
-    df.index.name = "date"
+    obs = data.get("observations", [])
+    if not obs:
+        print("  FRED returned no observations.")
+        return
+
+    rows = [(o["date"], o["value"]) for o in obs if o.get("value") != "."]
+    df = pd.DataFrame(rows, columns=["date", series_id])
+    df["date"] = pd.to_datetime(df["date"])
+    df[series_id] = pd.to_numeric(df[series_id], errors="coerce")
+    df = df.dropna().set_index("date").sort_index()
     df.to_csv(out_path)
     print(f"  FRED DGS10: {len(df)} rows")
 

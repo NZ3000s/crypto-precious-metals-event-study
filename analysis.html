@@ -21,41 +21,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -124,25 +89,12 @@ Did the introduction of Binance TRADFI gold and silver perpetual futures change 
 <h2 class="anchored" data-anchor-id="data-and-feature-set">2. Data and feature set</h2>
 <p>This section loads the pre‑built daily feature dataset <code>data/processed/features_daily.csv</code>.<br>
 Raw data sources and feature definitions are described in <code>DATA_DESCRIPTION.md</code> and <code>VARIABLES_DESCRIPTION.md</code>.</p>
-<div id="9c2fab6e" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">"seaborn-v0_8"</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Load features (note: the date column is named 'Date' in the CSV)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">"data/processed/features_daily.csv"</span>, parse_dates<span class="op">=</span>[<span class="st">"Date"</span>])</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.set_index(<span class="st">"Date"</span>).sort_index()</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>df.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fd95b91d" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display" data-execution_count="1">
 <pre><code>(112, 85)</code></pre>
 </div>
 </div>
-<div id="ff242e90" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="2f4a6edb" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
 
@@ -328,18 +280,9 @@ Raw data sources and feature definitions are described in <code>DATA_DESCRIPTION
 </div>
 <section id="basic-cleaning-and-event-date" class="level3">
 <h3 class="anchored" data-anchor-id="basic-cleaning-and-event-date">2.1 Basic cleaning and event date</h3>
-<p>We define the main event date as the launch of Binance XAUUSDT TRADFI perpetual futures (2026‑01‑05).<br>
+<p>We define the <strong>event</strong> as the <strong>launch</strong> of Binance XAUUSDT TRADFI perpetual futures. So there is one date: 2026‑01‑05 (event = launch).<br>
 To keep a meaningful pre‑event window, we only require that ETF prices and returns are available; Binance‑specific fields are allowed to be missing before the launch.</p>
-<div id="ce16cc33" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>event_date <span class="op">=</span> pd.Timestamp(<span class="st">"2026-01-05"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Require only ETF prices/returns (pre‑event we do not have Binance data)</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>core_cols <span class="op">=</span> [<span class="st">"px_gld_close"</span>, <span class="st">"px_slv_close"</span>, <span class="st">"ret_gld"</span>, <span class="st">"ret_slv"</span>]</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>df_core <span class="op">=</span> df.dropna(subset<span class="op">=</span>core_cols).copy()</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>df_core[<span class="st">"post_event"</span>] <span class="op">=</span> (df_core.index <span class="op">&gt;=</span> event_date).astype(<span class="bu">int</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>df_core.info()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="29873ef4" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-stdout">
 <pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
 DatetimeIndex: 111 entries, 2025-09-03 to 2026-02-10
@@ -435,8 +378,7 @@ dtypes: float64(80), int64(5)
 memory usage: 74.6 KB</code></pre>
 </div>
 </div>
-<div id="2b67b01e" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df_core[[<span class="st">"post_event"</span>]].value_counts().sort_index()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="5ba223c5" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>post_event
 0             85
@@ -450,27 +392,7 @@ Name: count, dtype: int64</code></pre>
 <h2 class="anchored" data-anchor-id="descriptive-statistics">3. Descriptive statistics</h2>
 <section id="prices-and-returns" class="level3">
 <h3 class="anchored" data-anchor-id="prices-and-returns">3.1 Prices and returns</h3>
-<div id="ff901e07" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">7</span>), sharex<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ETF prices</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"px_gld_close"</span>], label<span class="op">=</span><span class="st">"GLD close"</span>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"px_slv_close"</span>], label<span class="op">=</span><span class="st">"SLV close"</span>)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, label<span class="op">=</span><span class="st">"Event date"</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"Price"</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"GLD and SLV prices"</span>)</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend()</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Binance aggregated close prices</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"px_xau_binance_close"</span>], label<span class="op">=</span><span class="st">"XAUUSDT close"</span>)</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"px_xag_binance_close"</span>], label<span class="op">=</span><span class="st">"XAGUSDT close"</span>)</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, label<span class="op">=</span><span class="st">"Event date"</span>)</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">"Price"</span>)</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Binance TRADFI gold and silver futures (daily close)"</span>)</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend()</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="89019fb7" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -479,10 +401,18 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="f627db8f" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>returns_cols <span class="op">=</span> [<span class="st">"ret_gld"</span>, <span class="st">"ret_slv"</span>, <span class="st">"ret_xau_binance"</span>, <span class="st">"ret_xag_binance"</span>]</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df_core[returns_cols].describe().T[[<span class="st">"mean"</span>, <span class="st">"std"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="6">
+<p><strong>Cumulative returns</strong> (normalized to 100 at the first date): a clear view of relative performance and whether paths diverge after the event.</p>
+<div id="c1afbb08" class="cell" data-execution_count="6">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="90d5bd57" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
 
@@ -535,46 +465,28 @@ Name: count, dtype: int64</code></pre>
 <section id="volatility-and-liquidity-over-time" class="level3">
 <h3 class="anchored" data-anchor-id="volatility-and-liquidity-over-time">3.2 Volatility and liquidity over time</h3>
 <p>We look at 20‑day realized volatility for GLD and SLV and ETF trading volume.</p>
-<div id="377dcee5" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">3</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">9</span>), sharex<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"vol_realized_20_ret_gld"</span>], label<span class="op">=</span><span class="st">"GLD 20d vol"</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(df_core.index, df_core[<span class="st">"vol_realized_20_ret_slv"</span>], label<span class="op">=</span><span class="st">"SLV 20d vol"</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Realized 20‑day volatility (GLD, SLV)"</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend()</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"vol_parkinson_gld"</span>], label<span class="op">=</span><span class="st">"GLD Parkinson vol"</span>)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(df_core.index, df_core[<span class="st">"vol_parkinson_slv"</span>], label<span class="op">=</span><span class="st">"SLV Parkinson vol"</span>)</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Parkinson volatility (GLD, SLV)"</span>)</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend()</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"vol_gld"</span> <span class="kw">in</span> df_core.columns <span class="kw">and</span> <span class="st">"vol_slv"</span> <span class="kw">in</span> df_core.columns:</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].plot(df_core.index, df_core[<span class="st">"vol_gld"</span>], label<span class="op">=</span><span class="st">"GLD volume"</span>)</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].plot(df_core.index, df_core[<span class="st">"vol_slv"</span>], label<span class="op">=</span><span class="st">"SLV volume"</span>)</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].axvline(event_date, color<span class="op">=</span><span class="st">"red"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].set_title(<span class="st">"ETF trading volume"</span>)</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].legend()</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="5ab22408" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<div id="3db9392e" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>liq_cols <span class="op">=</span> []</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> c <span class="kw">in</span> [<span class="st">"amihud_gld"</span>, <span class="st">"amihud_20_gld"</span>, <span class="st">"amihud_slv"</span>, <span class="st">"amihud_20_slv"</span>]:</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> c <span class="kw">in</span> df_core.columns:</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        liq_cols.append(c)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>df_core[liq_cols].describe().T[[<span class="st">"mean"</span>, <span class="st">"std"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="8">
+<p><strong>What this shows:</strong> The <em>rolling 20-day correlation</em> is the correlation between daily returns of the ETF (GLD or SLV) and the Binance perpetual (XAUUSDT or XAGUSDT) over the last 20 days. Values near 1 mean the two series move together; values near 0 mean no linear link. So we see how strongly gold/silver ETF and crypto perpetual prices co-move after the Binance launch. This metric exists only when both sides have data (post-event). Pre/post comparison is in the tables in section 4 and 6.</p>
+<p><strong>Single chart (gold and silver together):</strong> Same scale and dates so both lines are easy to compare. Y-axis is limited to the range where the data lies so the lines are not squeezed at the top. The vertical line is the <strong>event date</strong> — that is, the <strong>launch date</strong> of Binance XAUUSDT (2026-01-05). We use this single date as “the event” everywhere in the report. The SLV–XAG line starts later than GLD–XAU because XAGUSDT was listed a few days after XAUUSDT, so the 20-day rolling window has enough data only from a later date.</p>
+<div id="c789e523" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="9163786d" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
 
@@ -627,116 +539,33 @@ Name: count, dtype: int64</code></pre>
 <section id="correlogram" class="level3">
 <h3 class="anchored" data-anchor-id="correlogram">3.3 Correlogram</h3>
 <p>We compute the correlation matrix for a set of variables that are meaningful for the analysis: returns, volatility measures, integration (rolling correlation/beta), liquidity proxies, controls and the event dummy. Only numeric series with sufficient non-missing overlap are included.</p>
-<div id="f29847f9" class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables that make sense for correlation (numeric, interpretable)</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>corr_candidates <span class="op">=</span> [</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ret_gld"</span>, <span class="st">"ret_slv"</span>, <span class="st">"ret_xau_binance"</span>, <span class="st">"ret_xag_binance"</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>, <span class="st">"vol_realized_20_ret_slv"</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_xau_binance"</span>, <span class="st">"vol_realized_20_ret_xag_binance"</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_gld"</span>, <span class="st">"vol_parkinson_slv"</span>,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_xau_binance"</span>, <span class="st">"vol_parkinson_xag_binance"</span>,</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_gld_xau"</span>, <span class="st">"corr_20_slv_xag"</span>,</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"beta_60_gld_on_xau"</span>, <span class="st">"beta_60_slv_on_xag"</span>,</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_ratio_gld_xau"</span>, <span class="st">"vol_ratio_slv_xag"</span>,</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"log_vol_gld"</span>, <span class="st">"log_vol_slv"</span>,</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"amihud_gld"</span>, <span class="st">"amihud_slv"</span>, <span class="st">"amihud_20_gld"</span>, <span class="st">"amihud_20_slv"</span>,</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy"</span>, <span class="st">"vix"</span>, <span class="st">"tnx"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>,</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"post_event"</span>, <span class="st">"funding_xau"</span>, <span class="st">"funding_xag"</span>,</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>corr_cols <span class="op">=</span> [c <span class="cf">for</span> c <span class="kw">in</span> corr_candidates <span class="cf">if</span> c <span class="kw">in</span> df_core.columns]</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>corr_data <span class="op">=</span> df_core[corr_cols].dropna(how<span class="op">=</span><span class="st">"all"</span>, axis<span class="op">=</span><span class="dv">1</span>).dropna(how<span class="op">=</span><span class="st">"any"</span>, axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> corr_data.shape[<span class="dv">0</span>] <span class="op">&lt;</span> <span class="dv">5</span>:</span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    corr_data <span class="op">=</span> df_core[corr_cols].dropna(how<span class="op">=</span><span class="st">"all"</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    corr_data <span class="op">=</span> corr_data.dropna(axis<span class="op">=</span><span class="dv">0</span>, thresh<span class="op">=</span>corr_data.shape[<span class="dv">1</span>] <span class="op">//</span> <span class="dv">2</span>)</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>C <span class="op">=</span> corr_data.corr()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div id="e3dd3a8f" class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Short labels for readability</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>short <span class="op">=</span> {</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ret_gld"</span>: <span class="st">"ret GLD"</span>, <span class="st">"ret_slv"</span>: <span class="st">"ret SLV"</span>,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ret_xau_binance"</span>: <span class="st">"ret XAU"</span>, <span class="st">"ret_xag_binance"</span>: <span class="st">"ret XAG"</span>,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>: <span class="st">"vol20 GLD"</span>, <span class="st">"vol_realized_20_ret_slv"</span>: <span class="st">"vol20 SLV"</span>,</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_xau_binance"</span>: <span class="st">"vol20 XAU"</span>, <span class="st">"vol_realized_20_ret_xag_binance"</span>: <span class="st">"vol20 XAG"</span>,</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_gld"</span>: <span class="st">"Park GLD"</span>, <span class="st">"vol_parkinson_slv"</span>: <span class="st">"Park SLV"</span>,</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_xau_binance"</span>: <span class="st">"Park XAU"</span>, <span class="st">"vol_parkinson_xag_binance"</span>: <span class="st">"Park XAG"</span>,</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_gld_xau"</span>: <span class="st">"corr GLD-XAU"</span>, <span class="st">"corr_20_slv_xag"</span>: <span class="st">"corr SLV-XAG"</span>,</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"beta_60_gld_on_xau"</span>: <span class="st">"beta GLD/XAU"</span>, <span class="st">"beta_60_slv_on_xag"</span>: <span class="st">"beta SLV/XAG"</span>,</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_ratio_gld_xau"</span>: <span class="st">"vol ratio G/X"</span>, <span class="st">"vol_ratio_slv_xag"</span>: <span class="st">"vol ratio S/X"</span>,</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"log_vol_gld"</span>: <span class="st">"log vol GLD"</span>, <span class="st">"log_vol_slv"</span>: <span class="st">"log vol SLV"</span>,</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"amihud_gld"</span>: <span class="st">"Amihud GLD"</span>, <span class="st">"amihud_slv"</span>: <span class="st">"Amihud SLV"</span>,</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"amihud_20_gld"</span>: <span class="st">"Amihud20 GLD"</span>, <span class="st">"amihud_20_slv"</span>: <span class="st">"Amihud20 SLV"</span>,</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy"</span>: <span class="st">"DXY"</span>, <span class="st">"vix"</span>: <span class="st">"VIX"</span>, <span class="st">"tnx"</span>: <span class="st">"TNX"</span>,</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy_ret"</span>: <span class="st">"DXY ret"</span>, <span class="st">"vix_ret"</span>: <span class="st">"VIX ret"</span>, <span class="st">"tnx_ret"</span>: <span class="st">"TNX ret"</span>,</span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"post_event"</span>: <span class="st">"post_event"</span>, <span class="st">"funding_xau"</span>: <span class="st">"fund XAU"</span>, <span class="st">"funding_xag"</span>: <span class="st">"fund XAG"</span>,</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>C_plot <span class="op">=</span> C.rename(index<span class="op">=</span>short, columns<span class="op">=</span>short)</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">14</span>, <span class="dv">12</span>))</span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>sns.heatmap(</span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    C_plot,</span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    cmap<span class="op">=</span><span class="st">"RdBu_r"</span>,</span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    center<span class="op">=</span><span class="dv">0</span>,</span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    vmin<span class="op">=-</span><span class="dv">1</span>,</span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    vmax<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    square<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    linewidths<span class="op">=</span><span class="fl">0.3</span>,</span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    ax<span class="op">=</span>ax,</span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    annot<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Correlogram: returns, volatility, integration, liquidity, controls"</span>)</span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>plt.xticks(rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">"right"</span>)</span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="c44f568c" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<div id="b6011b34" class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary: variables most correlated with post_event (if any)</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"post_event"</span> <span class="kw">in</span> C.columns:</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    post_corr <span class="op">=</span> C[<span class="st">"post_event"</span>].drop(<span class="st">"post_event"</span>, errors<span class="op">=</span><span class="st">"ignore"</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    post_corr <span class="op">=</span> post_corr.reindex(post_corr.<span class="bu">abs</span>().sort_values(ascending<span class="op">=</span><span class="va">False</span>).index)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    post_corr.head(<span class="dv">12</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<p><strong>Comment.</strong> Variables with the largest absolute correlation with <code>post_event</code> are those that move most with the event. This helps spot which outcomes (e.g.&nbsp;volatility, correlation) are most linked to the launch.</p>
 </section>
 </section>
 <section id="eventstudy-style-comparison" class="level2">
 <h2 class="anchored" data-anchor-id="eventstudy-style-comparison">4. Event‑study style comparison</h2>
-<p>We compare average volatility, volume and integration measures before and after the futures launch.</p>
-<div id="8d91b9b4" class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> summarize_pre_post(series: pd.Series, label: <span class="bu">str</span>) <span class="op">-&gt;</span> pd.DataFrame:</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    pre <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">0</span>].dropna()</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    post <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">1</span>].dropna()</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame(</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        {</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">"metric"</span>: [label, label],</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">"period"</span>: [<span class="st">"pre"</span>, <span class="st">"post"</span>],</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mean"</span>: [pre.mean(), post.mean()],</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">"std"</span>: [pre.std(), post.std()],</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">"n"</span>: [pre.shape[<span class="dv">0</span>], post.shape[<span class="dv">0</span>]],</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_realized_20_ret_gld"</span>], <span class="st">"GLD 20d vol"</span>))</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_realized_20_ret_slv"</span>], <span class="st">"SLV 20d vol"</span>))</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_parkinson_gld"</span>], <span class="st">"GLD Parkinson vol"</span>))</span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>rows.append(summarize_pre_post(df_core[<span class="st">"vol_parkinson_slv"</span>], <span class="st">"SLV Parkinson vol"</span>))</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"vol_gld"</span> <span class="kw">in</span> df_core.columns:</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"vol_gld"</span>], <span class="st">"GLD volume"</span>))</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"vol_slv"</span> <span class="kw">in</span> df_core.columns:</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"vol_slv"</span>], <span class="st">"SLV volume"</span>))</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"corr_20_gld_xau"</span> <span class="kw">in</span> df_core.columns:</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"corr_20_gld_xau"</span>], <span class="st">"corr_20_gld_xau"</span>))</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"corr_20_slv_xag"</span> <span class="kw">in</span> df_core.columns:</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    rows.append(summarize_pre_post(df_core[<span class="st">"corr_20_slv_xag"</span>], <span class="st">"corr_20_slv_xag"</span>))</span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>summary_pre_post <span class="op">=</span> pd.concat(rows, ignore_index<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>summary_pre_post</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="12">
+<p>We compare average volatility, volume and integration measures before and after the futures launch. The event date is 2026-01-05 (Binance XAUUSDT TRADFI launch).</p>
+<p><strong>Pre vs post distributions</strong> for key metrics (boxplots by period):</p>
+<div id="e416a326" class="cell" data-execution_count="14">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="f8851c0a" class="cell" data-execution_count="15">
+<div class="cell-output cell-output-display" data-execution_count="15">
 <div>
 
 
@@ -886,40 +715,10 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
+<p><strong>Comment.</strong> Compare the “pre” and “post” rows for each metric. If the post mean is higher than the pre mean for volatility or correlation, that points to an increase after the event. For volume, higher post means more trading. For liquidity (Amihud), lower post means better liquidity.</p>
 <p>For a more formal comparison we can run simple t‑tests.</p>
-<div id="e9e85feb" class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy <span class="im">import</span> stats</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ttest_pre_post(series: pd.Series) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    pre <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">0</span>].dropna()</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    post <span class="op">=</span> series[df_core[<span class="st">"post_event"</span>] <span class="op">==</span> <span class="dv">1</span>].dropna()</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(pre) <span class="op">&lt;</span> <span class="dv">3</span> <span class="kw">or</span> <span class="bu">len</span>(post) <span class="op">&lt;</span> <span class="dv">3</span>:</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {<span class="st">"t_stat"</span>: np.nan, <span class="st">"p_value"</span>: np.nan}</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    t_stat, p_val <span class="op">=</span> stats.ttest_ind(post, pre, equal_var<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">"t_stat"</span>: t_stat, <span class="st">"p_value"</span>: p_val}</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> {</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>: <span class="st">"GLD 20d vol"</span>,</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_slv"</span>: <span class="st">"SLV 20d vol"</span>,</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_gld"</span>: <span class="st">"GLD Parkinson vol"</span>,</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_parkinson_slv"</span>: <span class="st">"SLV Parkinson vol"</span>,</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_gld"</span>: <span class="st">"GLD volume"</span>,</span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_slv"</span>: <span class="st">"SLV volume"</span>,</span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_gld_xau"</span>: <span class="st">"corr_20_gld_xau"</span>,</span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"corr_20_slv_xag"</span>: <span class="st">"corr_20_slv_xag"</span>,</span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>tt_rows <span class="op">=</span> []</span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> col, label <span class="kw">in</span> metrics.items():</span>
-<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> col <span class="kw">in</span> df_core.columns:</span>
-<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        res <span class="op">=</span> ttest_pre_post(df_core[col])</span>
-<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        tt_rows.append(</span>
-<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>            {<span class="st">"metric"</span>: label, <span class="st">"t_stat"</span>: res[<span class="st">"t_stat"</span>], <span class="st">"p_value"</span>: res[<span class="st">"p_value"</span>]}</span>
-<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>tt_results <span class="op">=</span> pd.DataFrame(tt_rows)</span>
-<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>tt_results</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="13">
+<div id="1246c41e" class="cell" data-execution_count="16">
+<div class="cell-output cell-output-display" data-execution_count="16">
 <div>
 
 
@@ -987,27 +786,13 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
+<p><strong>Comment.</strong> A low p-value (e.g.&nbsp;below 0.05) means the difference between pre and post is statistically significant. Use this together with the pre/post means to say whether the change is meaningful.</p>
 </section>
 <section id="simple-regression-models" class="level2">
 <h2 class="anchored" data-anchor-id="simple-regression-models">5. Simple regression models</h2>
 <p>We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns.</p>
-<div id="b1255cc1" class="cell" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.api <span class="im">as</span> sm</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>reg_df <span class="op">=</span> df_core.copy()</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>reg_cols <span class="op">=</span> [</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>,</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_slv"</span>,</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dxy_ret"</span>,</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vix_ret"</span>,</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tnx_ret"</span>,</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"post_event"</span>,</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>reg_df_reg <span class="op">=</span> reg_df[reg_cols].dropna()</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>reg_df_reg.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="14">
+<div id="7c60a1cf" class="cell" data-execution_count="17">
+<div class="cell-output cell-output-display" data-execution_count="17">
 <div>
 
 
@@ -1084,37 +869,7 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="23b4fcdf" class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_ols(y_col: <span class="bu">str</span>, x_cols: <span class="bu">list</span>, data: pd.DataFrame):</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Run a simple OLS regression if there are enough observations.</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns a fitted model or None.</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">=</span> data[[y_col] <span class="op">+</span> x_cols].dropna()</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> sub.shape[<span class="dv">0</span>] <span class="op">&lt;</span> <span class="dv">10</span>:</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Not enough non-missing observations for </span><span class="sc">{</span>y_col<span class="sc">}</span><span class="ss"> (n=</span><span class="sc">{</span>sub<span class="sc">.</span>shape[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">). Skipping regression."</span>)</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> sub[y_col]</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> sm.add_constant(sub[x_cols])</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> sm.OLS(y, X, missing<span class="op">=</span><span class="st">"drop"</span>)</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit()</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>model_gld_vol <span class="op">=</span> run_ols(</span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_gld"</span>,</span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    reg_df,</span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>model_slv_vol <span class="op">=</span> run_ols(</span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"vol_realized_20_ret_slv"</span>,</span>
-<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    reg_df,</span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> model_gld_vol <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(model_gld_vol.summary().tables[<span class="dv">1</span>])</span>
-<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>()</span>
-<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> model_slv_vol <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(model_slv_vol.summary().tables[<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="d198099e" class="cell" data-execution_count="18">
 <div class="cell-output cell-output-stdout">
 <pre><code>==============================================================================
                  coef    std err          t      P&gt;|t|      [0.025      0.975]
@@ -1137,25 +892,9 @@ tnx_ret       -0.0560      0.178     -0.315      0.753      -0.409       0.297
 ==============================================================================</code></pre>
 </div>
 </div>
+<p><strong>Comment.</strong> The <code>post_event</code> coefficient is the main result: it shows how much volatility changed after the launch, once we control for DXY, VIX and 10Y yield changes. If it is positive and the p-value (P&gt;|t|) is below 0.05, we conclude that volatility increased after the event (H1 supported for that ETF).</p>
 <p>If needed, we can also model absolute returns as a simple proxy for volatility:</p>
-<div id="fe78d443" class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"ret_gld_abs"</span> <span class="kw">in</span> reg_df.columns <span class="kw">and</span> <span class="st">"ret_slv_abs"</span> <span class="kw">in</span> reg_df.columns:</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    model_gld_abs <span class="op">=</span> run_ols(</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ret_gld_abs"</span>,</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        reg_df,</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    model_slv_abs <span class="op">=</span> run_ols(</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ret_slv_abs"</span>,</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>        [<span class="st">"post_event"</span>, <span class="st">"dxy_ret"</span>, <span class="st">"vix_ret"</span>, <span class="st">"tnx_ret"</span>],</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        reg_df,</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> model_gld_abs <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(model_gld_abs.summary().tables[<span class="dv">1</span>])</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>()</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> model_slv_abs <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(model_slv_abs.summary().tables[<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="5ed51e14" class="cell" data-execution_count="19">
 <div class="cell-output cell-output-stdout">
 <pre><code>==============================================================================
                  coef    std err          t      P&gt;|t|      [0.025      0.975]
@@ -1181,18 +920,154 @@ tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
 </section>
 <section id="interpretation-and-next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="interpretation-and-next-steps">6. Interpretation and next steps</h2>
+<section id="key-results-summary" class="level3">
+<h3 class="anchored" data-anchor-id="key-results-summary">6.1 Key results summary</h3>
+<p>The table below summarizes pre- vs post-event means, t-test p-values, and the regression coefficient on <code>post_event</code> (with DXY, VIX and 10Y yield changes as controls) for the main outcome variables.</p>
+<div id="d3d966c5" class="cell" data-execution_count="20">
+<div class="cell-output cell-output-display" data-execution_count="20">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Metric</th>
+<th data-quarto-table-cell-role="th">Pre mean</th>
+<th data-quarto-table-cell-role="th">Post mean</th>
+<th data-quarto-table-cell-role="th">t-test p</th>
+<th data-quarto-table-cell-role="th">post_event coef</th>
+<th data-quarto-table-cell-role="th">regression p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>GLD 20d vol</td>
+<td>0.013439</td>
+<td>2.084300e-02</td>
+<td>0.0004</td>
+<td>0.007529</td>
+<td>0.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>SLV 20d vol</td>
+<td>0.024114</td>
+<td>5.884500e-02</td>
+<td>0.0</td>
+<td>0.035004</td>
+<td>0.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>GLD Parkinson vol</td>
+<td>0.008671</td>
+<td>1.181800e-02</td>
+<td>0.011</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>SLV Parkinson vol</td>
+<td>0.016253</td>
+<td>3.233200e-02</td>
+<td>0.0</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>GLD volume</td>
+<td>15123724.705882</td>
+<td>2.534337e+07</td>
+<td>0.0113</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>SLV volume</td>
+<td>43889215.294118</td>
+<td>1.591018e+08</td>
+<td>0.0</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>Corr GLD–XAU</td>
+<td>—</td>
+<td>9.213690e-01</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>Corr SLV–XAG</td>
+<td>—</td>
+<td>9.354340e-01</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p><strong>Comment.</strong> This table brings everything together. Use “Pre mean” vs “Post mean” to see the direction of change; “t-test p” to see if the change is significant; and “post_event coef” with “regression p” (for GLD and SLV volatility) to see the effect of the event after controlling for macro factors. For volatility, a positive and significant post_event coef supports H1; for correlation, higher post mean and low t-test p support H3; for volume, higher post mean supports H2.</p>
+</section>
+<section id="empirical-results" class="level3">
+<h3 class="anchored" data-anchor-id="empirical-results">6.2 Empirical results</h3>
+<div id="5cde62a9" class="cell" data-execution_count="21">
+<div class="cell-output cell-output-stdout">
+<pre><code>**Volatility (H1):** After controlling for DXY, VIX and 10Y yield changes, the post-event coefficient in the GLD 20-day volatility regression is 0.00753 (p = 0.000), so volatility increased post launch and the effect is significant at the 5% level.
+
+For SLV, the post_event coefficient is 0.03500 (p = 0.000): volatility increased and is significant.
+
+**Integration (H3):** Average rolling correlation GLD–XAU is 0.921 post-event (pre: nan); SLV–XAG is 0.935 post-event (pre: nan). Higher post-event correlations would support increased price co-movement between ETFs and Binance perpetuals.
+
+**Liquidity (H2):** Average GLD volume is 25343369 post-event vs 15123725 pre-event; SLV volume can be read from the pre/post table. Higher volume and lower Amihud post-event would indicate improved liquidity.
+</code></pre>
+</div>
+</div>
+</section>
+<section id="conclusions-on-hypotheses" class="level3">
+<h3 class="anchored" data-anchor-id="conclusions-on-hypotheses">6.3 Conclusions on hypotheses</h3>
+<p>Using the key-results table and regressions above, we state whether each hypothesis is supported or not.</p>
+<div id="3b1e8c86" class="cell" data-execution_count="22">
+<div class="cell-output cell-output-stdout">
+<pre><code>H1 (volatility increase after launch):
+  GLD: supported (positive and significant post_event means higher volatility).
+  SLV: supported.
+
+H3 (stronger co-movement, higher rolling correlation post-event):
+  GLD–XAU: not supported.
+  SLV–XAG: not supported.
+
+H2 (improved liquidity: higher volume, lower Amihud):
+  GLD volume: higher post (higher post supports H2).
+  SLV volume: higher post.
+  Check Amihud in the pre/post table; lower post = better liquidity.</code></pre>
+</div>
+</div>
+</section>
+<section id="limitations-and-extensions" class="level3">
+<h3 class="anchored" data-anchor-id="limitations-and-extensions">6.4 Limitations and extensions</h3>
 <ul>
-<li>Use the <strong>pre/post summary table</strong> and <strong>t‑tests</strong> to decide whether volatility, volume and integration measures changed after the event.<br>
-</li>
-<li>Use <strong>regression coefficients on <code>post_event</code></strong> to quantify the impact controlling for DXY, VIX and 10Y yield changes.<br>
-</li>
-<li>Based on these results, you can write the Empirical Results and Discussion sections of the report, focusing on:
-<ul>
-<li>sign and significance of the <code>post_event</code> coefficient,</li>
-<li>whether integration metrics (<code>corr_20</code>, <code>beta_60</code>) increased,</li>
-<li>whether liquidity improved or worsened.</li>
-</ul></li>
+<li><strong>Short post-event window.</strong> We have limited days after the Binance launch. Results can change when more data are available.</li>
+<li><strong>Robustness.</strong> Try different event dates, volatility windows (e.g.&nbsp;10d or 60d), or placebo tests (fake event date) to see if the effects hold.</li>
+<li><strong>Beta.</strong> The key-results table focuses on volatility, volume and correlation. You can add pre/post means for <code>beta_60_gld_on_xau</code> and <code>beta_60_slv_on_xag</code> in the same way if you want to discuss integration in terms of beta.</li>
 </ul>
+</section>
+<section id="conclusion" class="level3">
+<h3 class="anchored" data-anchor-id="conclusion">6.5 Conclusion</h3>
+<p>We asked whether the launch of Binance gold and silver perpetuals (XAUUSDT, XAGUSDT) changed volatility, liquidity and price co-movement in gold and silver ETFs (GLD, SLV). The regressions show a positive and significant coefficient on the post-event dummy for both GLD and SLV volatility when we control for DXY, VIX and 10Y yield changes: that supports <strong>H1</strong> (volatility increased after the launch). For <strong>H3</strong> (integration), we look at whether rolling correlations GLD–XAU and SLV–XAG are higher and statistically different post-event; the conclusions in section 6.3 state whether that is the case. For <strong>H2</strong> (liquidity), we compare pre- and post-event volume and Amihud from the summary table. In short: the evidence from this sample points to higher ETF volatility after the Binance TRADFI launch, with integration and liquidity conclusions as in the hypothesis checks above. Because the post-event window is still short, updating the analysis with more data is recommended.</p>
+</section>
 </section>
 
 </main>
