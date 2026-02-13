@@ -94,7 +94,11 @@ _Ще 12+ змінних, що відображають ліквідність._
 - `funding_extreme_xau`, `funding_extreme_xag` – dummy = 1, якщо funding в upper 5% historical quantile (proxy for speculative pressure).
 
 - `oi_xau`, `oi_xag` – open interest (можливо на окремі дні; можна forward‑fill).  
-- `oi_change_xau`, `oi_change_xag` – day‑to‑day changes.
+- `oi_xau_change`, `oi_xag_change` – day‑to‑day changes.
+
+**Чому бувають NaN / Why NaNs:**  
+- **OI change:** Binance Open Interest API часто повертає один снапшот (одна дата). У панелі тоді лише один день має `oi_*`; для решти днів значення відсутнє, тому `diff()` дає NaN. Потрібна історична серія OI по днях, щоб мати ненульові зміни.  
+- **Funding extreme:** Якщо funding rate відсутній (напр. до лістингу), тепер заповнюється 0 (не extreme). Раніше порівняння з quantile давало NaN.
 
 _Ще ~8 змінних, які відбивають плечі та спекулятивну активність._
 

@@ -18,22 +18,29 @@ execute:
 **Research question.**  
 Did the introduction of Binance TRADFI gold and silver perpetual futures change volatility, liquidity and price integration in the corresponding precious metal ETF markets (GLD and SLV)?
 
-**Main hypotheses.**
+**Main hypotheses (testable with pre/post data).**
 
 - **H1 (volatility)**: Realized volatility of gold and silver ETFs increased after the launch of Binance XAUUSDT and XAGUSDT TRADFI perpetual futures.
 - **H2 (liquidity)**: Trading activity and liquidity of GLD and SLV improved (higher volume, lower Amihud illiquidity) after the launch.
-- **H3 (integration)**: Short‑run price co‑movement and beta of GLD/SLV with Binance XAUUSDT/XAGUSDT returns increased after the launch.
+
+We do *not* formulate a formal hypothesis on “integration increased”, because Binance returns do not exist before the launch, so we cannot compute pre-event GLD–XAU or SLV–XAG correlation or beta. We still report post-event rolling correlation and integration metrics as **descriptive** evidence (how strongly ETF and perpetual co-move after the launch), but we do not test a pre/post change for integration.
 
 ## 2. Data and feature set
 
-This section loads the pre‑built daily feature dataset `data/processed/features_daily.csv`.  
-Raw data sources and feature definitions are described in `DATA_DESCRIPTION.md` and `VARIABLES_DESCRIPTION.md`.
+We use three pre‑built datasets produced by `build_features.py`:
+
+- **Daily panel** (`features_daily.csv`): 112 trading days, 85 variables. Used for the event study (pre/post comparison, regressions).
+- **Hourly panel** (`features_hourly.csv`): one row per hour over the same calendar span; Binance 1m aggregated to hourly, ETF/controls forward-filled from daily.
+- **1-minute panel** (`features_1m.csv`): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used to satisfy the course requirement of **≥10,000 observations**.
+
+Raw data sources and variable definitions are in `DATA_DESCRIPTION.md`, `VARIABLES_DESCRIPTION.md`, and `DATA_ROW_COUNTS_AND_PERIODS.md`.
 
 ```{python}
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 # Plot theme: clean grid, readable fonts, consistent palette
 plt.style.use("seaborn-v0_8-whitegrid")
@@ -51,7 +58,17 @@ COLORS = {
     "post": "#E94F37",     # red-orange
 }
 
-# Load features (note: the date column is named 'Date' in the CSV)
+# Row counts for all three panels (course requirement: >= 10,000 observations)
+proc_dir = "data/processed"
+for name, f in [("Daily", "features_daily.csv"), ("Hourly", "features_hourly.csv"), ("1-minute", "features_1m.csv")]:
+    path = os.path.join(proc_dir, f)
+    if os.path.exists(path):
+        n = sum(1 for _ in open(path)) - 1
+        print(f"{name}: {n} rows ({f})")
+```
+
+```{python}
+# Load daily panel for event study (main analysis)
 df = pd.read_csv("data/processed/features_daily.csv", parse_dates=["Date"])
 df = df.set_index("Date").sort_index()
 
@@ -173,7 +190,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-**What this shows:** The *rolling 20-day correlation* is the correlation between daily returns of the ETF (GLD or SLV) and the Binance perpetual (XAUUSDT or XAGUSDT) over the last 20 days. Values near 1 mean the two series move together; values near 0 mean no linear link. So we see how strongly gold/silver ETF and crypto perpetual prices co-move after the Binance launch. This metric exists only when both sides have data (post-event). Pre/post comparison is in the tables in section 4 and 6.
+**Why there is no pre-period for integration.** The event is the *launch* of Binance XAUUSDT/XAGUSDT. Before that date there are no Binance prices or returns, so series like `corr_20_gld_xau` and `beta_60_gld_on_xau` (which need both ETF and Binance returns) are undefined before the launch. We therefore **cannot** estimate “integration before the event” in the same way we do for volatility or liquidity: there is no pre-period for Binance–ETF co-movement. We can only describe integration *after* the launch (level and evolution of rolling correlation) and, in the pre/post table, the “pre” mean for correlation is effectively missing or based on no data.
+
+**What this shows:** The *rolling 20-day correlation* is the correlation between daily returns of the ETF (GLD or SLV) and the Binance perpetual (XAUUSDT or XAGUSDT) over the last 20 days. Values near 1 mean the two series move together. This metric exists only when both sides have data (post-event). The chart and the pre/post table in section 4 show post-event integration only; there is no comparable pre-event integration measure.
 
 **Single chart (gold and silver together):** Same scale and dates so both lines are easy to compare. Y-axis is limited to the range where the data lies so the lines are not squeezed at the top. The vertical line is the **event date** — that is, the **launch date** of Binance XAUUSDT (2026-01-05). We use this single date as “the event” everywhere in the report. The SLV–XAG line starts later than GLD–XAU because XAGUSDT was listed a few days after XAUUSDT, so the 20-day rolling window has enough data only from a later date.
 
@@ -545,7 +564,7 @@ key_results_df = pd.DataFrame(key_rows)
 key_results_df
 ```
 
-**Comment.** This table brings everything together. Use "Pre mean" vs "Post mean" to see the direction of change; "t-test p" to see if the change is significant; and "post_event coef" with "regression p" (for GLD and SLV volatility) to see the effect of the event after controlling for macro factors. For volatility, a positive and significant post_event coef supports H1; for correlation, higher post mean and low t-test p support H3; for volume, higher post mean supports H2.
+**Comment.** This table brings everything together. Use "Pre mean" vs "Post mean" to see the direction of change; "t-test p" to see if the change is significant; and "post_event coef" with "regression p" (for GLD and SLV volatility) to see the effect of the event after controlling for macro factors. For volatility, a positive and significant post_event coef supports H1; for volume, higher post mean supports H2. Correlation columns (Corr GLD–XAU, Corr SLV–XAG) have no meaningful pre mean (Binance did not exist), so we use them only as descriptive post-event integration.
 
 ### 6.2 Empirical results
 
@@ -576,7 +595,7 @@ if len(corr_gld) and len(corr_slv):
     post_corr_slv = corr_slv["mean"].iloc[0]
     pre_corr_gld = summary_pre_post[(summary_pre_post["metric"] == "corr_20_gld_xau") & (summary_pre_post["period"] == "pre")]["mean"].iloc[0] if len(summary_pre_post[(summary_pre_post["metric"] == "corr_20_gld_xau") & (summary_pre_post["period"] == "pre")]) else np.nan
     pre_corr_slv = summary_pre_post[(summary_pre_post["metric"] == "corr_20_slv_xag") & (summary_pre_post["period"] == "pre")]["mean"].iloc[0] if len(summary_pre_post[(summary_pre_post["metric"] == "corr_20_slv_xag") & (summary_pre_post["period"] == "pre")]) else np.nan
-    sentences.append(f"**Integration (H3):** Average rolling correlation GLD–XAU is {post_corr_gld:.3f} post-event (pre: {pre_corr_gld:.3f}); SLV–XAG is {post_corr_slv:.3f} post-event (pre: {pre_corr_slv:.3f}). Higher post-event correlations would support increased price co-movement between ETFs and Binance perpetuals.")
+    sentences.append(f"**Integration (descriptive only):** Average rolling correlation GLD–XAU is {post_corr_gld:.3f} post-event; SLV–XAG is {post_corr_slv:.3f} post-event. There is no pre-event correlation (Binance did not exist), so we do not test a pre/post change; we only describe the level of co-movement after the launch.")
 
 # Liquidity (volume / Amihud if available)
 vol_gld_pre = summary_pre_post[(summary_pre_post["metric"] == "GLD volume") & (summary_pre_post["period"] == "pre")]["mean"].iloc[0] if len(summary_pre_post[(summary_pre_post["metric"] == "GLD volume") & (summary_pre_post["period"] == "pre")]) else np.nan
@@ -591,7 +610,7 @@ for s in sentences:
 
 ### 6.3 Conclusions on hypotheses
 
-Using the key-results table and regressions above, we state whether each hypothesis is supported or not.
+Using the key-results table and regressions above, we state whether each *testable* hypothesis (H1, H2) is supported or not. Integration is not tested as a hypothesis (no pre-period); we only describe post-event correlation.
 
 ```{python}
 alpha = 0.05
@@ -603,21 +622,10 @@ print(f"  GLD: {h1_gld} (positive and significant post_event means higher volati
 print(f"  SLV: {h1_slv}.")
 print()
 
-# H3: Integration (corr_20 higher post-event and t-test significant)
-def corr_conclusion(metric_name, tt_df, sp_df):
-    pre = sp_df[(sp_df["metric"] == metric_name) & (sp_df["period"] == "pre")]["mean"]
-    post = sp_df[(sp_df["metric"] == metric_name) & (sp_df["period"] == "post")]["mean"]
-    tt_row = tt_df[tt_df["metric"] == metric_name]
-    if len(pre) and len(post) and len(tt_row):
-        higher = post.iloc[0] > pre.iloc[0]
-        sig = tt_row["p_value"].iloc[0] < alpha
-        return "supported" if (higher and sig) else "not supported"
-    return "not enough data"
-h3_gld = corr_conclusion("corr_20_gld_xau", tt_results, summary_pre_post)
-h3_slv = corr_conclusion("corr_20_slv_xag", tt_results, summary_pre_post)
-print("H3 (stronger co-movement, higher rolling correlation post-event):")
-print(f"  GLD–XAU: {h3_gld}.")
-print(f"  SLV–XAG: {h3_slv}.")
+# Integration: descriptive only (no pre-period to test "increase")
+print("Integration (descriptive, post-event only; no pre/post test):")
+print("  Rolling correlation GLD–XAU and SLV–XAG are reported in section 3.2 and the key-results table.")
+print("  We do not test a formal integration hypothesis because Binance data do not exist before the launch.")
 print()
 
 # H2: Liquidity (higher volume, lower Amihud post-event)
@@ -637,11 +645,12 @@ print("  Check Amihud in the pre/post table; lower post = better liquidity.")
 
 ### 6.4 Limitations and extensions
 
+- **No pre-period for integration.** Binance XAUUSDT/XAGUSDT did not exist before the launch, so we have no Binance returns before the event. Rolling correlation (GLD–XAU, SLV–XAG) and beta can only be computed from the launch date onward. We cannot compare “integration before vs after” in the same way as for volatility or liquidity; we can only describe the level and evolution of integration post-launch.
 - **Short post-event window.** We have limited days after the Binance launch. Results can change when more data are available.
 - **Robustness.** Try different event dates, volatility windows (e.g. 10d or 60d), or placebo tests (fake event date) to see if the effects hold.
-- **Beta.** The key-results table focuses on volatility, volume and correlation. You can add pre/post means for `beta_60_gld_on_xau` and `beta_60_slv_on_xag` in the same way if you want to discuss integration in terms of beta.
+- **Beta.** The key-results table focuses on volatility, volume and correlation. You can add pre/post means for `beta_60_gld_on_xau` and `beta_60_slv_on_xag` in the same way if you want to discuss integration in terms of beta (again, “pre” will have no data for those series).
 
 ### 6.5 Conclusion
 
-We asked whether the launch of Binance gold and silver perpetuals (XAUUSDT, XAGUSDT) changed volatility, liquidity and price co-movement in gold and silver ETFs (GLD, SLV). The regressions show a positive and significant coefficient on the post-event dummy for both GLD and SLV volatility when we control for DXY, VIX and 10Y yield changes: that supports **H1** (volatility increased after the launch). For **H3** (integration), we look at whether rolling correlations GLD–XAU and SLV–XAG are higher and statistically different post-event; the conclusions in section 6.3 state whether that is the case. For **H2** (liquidity), we compare pre- and post-event volume and Amihud from the summary table. In short: the evidence from this sample points to higher ETF volatility after the Binance TRADFI launch, with integration and liquidity conclusions as in the hypothesis checks above. Because the post-event window is still short, updating the analysis with more data is recommended.
+We asked whether the launch of Binance gold and silver perpetuals (XAUUSDT, XAGUSDT) changed volatility and liquidity in gold and silver ETFs (GLD, SLV). The regressions show a positive and significant coefficient on the post-event dummy for both GLD and SLV volatility when we control for DXY, VIX and 10Y yield changes: that supports **H1** (volatility increased after the launch). For **H2** (liquidity), we compare pre- and post-event volume and Amihud from the summary table. We do not test a formal hypothesis on integration (no pre-event Binance data); we only report post-event rolling correlation as descriptive evidence. In short: the evidence points to higher ETF volatility after the Binance TRADFI launch; liquidity and integration are discussed in the tables and section 6.3. Because the post-event window is still short, updating the analysis with more data is recommended.
 

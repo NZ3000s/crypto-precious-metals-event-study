@@ -87,15 +87,27 @@ Did the introduction of Binance TRADFI gold and silver perpetual futures change 
 </section>
 <section id="data-and-feature-set" class="level2">
 <h2 class="anchored" data-anchor-id="data-and-feature-set">2. Data and feature set</h2>
-<p>This section loads the pre‑built daily feature dataset <code>data/processed/features_daily.csv</code>.<br>
-Raw data sources and feature definitions are described in <code>DATA_DESCRIPTION.md</code> and <code>VARIABLES_DESCRIPTION.md</code>.</p>
-<div id="fd95b91d" class="cell" data-execution_count="1">
-<div class="cell-output cell-output-display" data-execution_count="1">
+<p>We use three pre‑built datasets produced by <code>build_features.py</code>:</p>
+<ul>
+<li><strong>Daily panel</strong> (<code>features_daily.csv</code>): 112 trading days, 85 variables. Used for the event study (pre/post comparison, regressions).</li>
+<li><strong>Hourly panel</strong> (<code>features_hourly.csv</code>): one row per hour over the same calendar span; Binance 1m aggregated to hourly, ETF/controls forward-filled from daily.</li>
+<li><strong>1-minute panel</strong> (<code>features_1m.csv</code>): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used to satisfy the course requirement of <strong>≥10,000 observations</strong>.</li>
+</ul>
+<p>Raw data sources and variable definitions are in <code>DATA_DESCRIPTION.md</code>, <code>VARIABLES_DESCRIPTION.md</code>, and <code>DATA_ROW_COUNTS_AND_PERIODS.md</code>.</p>
+<div id="1db0edbe" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-stdout">
+<pre><code>Daily: 112 rows (features_daily.csv)
+Hourly: 3888 rows (features_hourly.csv)
+1-minute: 53864 rows (features_1m.csv)</code></pre>
+</div>
+</div>
+<div id="d9e72b91" class="cell" data-execution_count="2">
+<div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>(112, 85)</code></pre>
 </div>
 </div>
-<div id="2f4a6edb" class="cell" data-execution_count="2">
-<div class="cell-output cell-output-display" data-execution_count="2">
+<div id="f2d6dc4e" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display" data-execution_count="3">
 <div>
 
 
@@ -282,7 +294,7 @@ Raw data sources and feature definitions are described in <code>DATA_DESCRIPTION
 <h3 class="anchored" data-anchor-id="basic-cleaning-and-event-date">2.1 Basic cleaning and event date</h3>
 <p>We define the <strong>event</strong> as the <strong>launch</strong> of Binance XAUUSDT TRADFI perpetual futures. So there is one date: 2026‑01‑05 (event = launch).<br>
 To keep a meaningful pre‑event window, we only require that ETF prices and returns are available; Binance‑specific fields are allowed to be missing before the launch.</p>
-<div id="29873ef4" class="cell" data-execution_count="3">
+<div id="4ebcaaff" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-stdout">
 <pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
 DatetimeIndex: 111 entries, 2025-09-03 to 2026-02-10
@@ -378,8 +390,8 @@ dtypes: float64(80), int64(5)
 memory usage: 74.6 KB</code></pre>
 </div>
 </div>
-<div id="5ba223c5" class="cell" data-execution_count="4">
-<div class="cell-output cell-output-display" data-execution_count="4">
+<div id="db64ef63" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display" data-execution_count="5">
 <pre><code>post_event
 0             85
 1             26
@@ -392,17 +404,7 @@ Name: count, dtype: int64</code></pre>
 <h2 class="anchored" data-anchor-id="descriptive-statistics">3. Descriptive statistics</h2>
 <section id="prices-and-returns" class="level3">
 <h3 class="anchored" data-anchor-id="prices-and-returns">3.1 Prices and returns</h3>
-<div id="89019fb7" class="cell" data-execution_count="5">
-<div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="analysis_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
-</figure>
-</div>
-</div>
-</div>
-<p><strong>Cumulative returns</strong> (normalized to 100 at the first date): a clear view of relative performance and whether paths diverge after the event.</p>
-<div id="c1afbb08" class="cell" data-execution_count="6">
+<div id="5489233e" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -411,8 +413,18 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="90d5bd57" class="cell" data-execution_count="7">
-<div class="cell-output cell-output-display" data-execution_count="7">
+<p><strong>Cumulative returns</strong> (normalized to 100 at the first date): a clear view of relative performance and whether paths diverge after the event.</p>
+<div id="bb55880b" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="292ee687" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display" data-execution_count="8">
 <div>
 
 
@@ -465,18 +477,7 @@ Name: count, dtype: int64</code></pre>
 <section id="volatility-and-liquidity-over-time" class="level3">
 <h3 class="anchored" data-anchor-id="volatility-and-liquidity-over-time">3.2 Volatility and liquidity over time</h3>
 <p>We look at 20‑day realized volatility for GLD and SLV and ETF trading volume.</p>
-<div id="5ab22408" class="cell" data-execution_count="8">
-<div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="analysis_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
-</figure>
-</div>
-</div>
-</div>
-<p><strong>What this shows:</strong> The <em>rolling 20-day correlation</em> is the correlation between daily returns of the ETF (GLD or SLV) and the Binance perpetual (XAUUSDT or XAGUSDT) over the last 20 days. Values near 1 mean the two series move together; values near 0 mean no linear link. So we see how strongly gold/silver ETF and crypto perpetual prices co-move after the Binance launch. This metric exists only when both sides have data (post-event). Pre/post comparison is in the tables in section 4 and 6.</p>
-<p><strong>Single chart (gold and silver together):</strong> Same scale and dates so both lines are easy to compare. Y-axis is limited to the range where the data lies so the lines are not squeezed at the top. The vertical line is the <strong>event date</strong> — that is, the <strong>launch date</strong> of Binance XAUUSDT (2026-01-05). We use this single date as “the event” everywhere in the report. The SLV–XAG line starts later than GLD–XAU because XAGUSDT was listed a few days after XAUUSDT, so the 20-day rolling window has enough data only from a later date.</p>
-<div id="c789e523" class="cell" data-execution_count="9">
+<div id="ae85738c" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -485,8 +486,19 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="9163786d" class="cell" data-execution_count="10">
-<div class="cell-output cell-output-display" data-execution_count="10">
+<p><strong>What this shows:</strong> The <em>rolling 20-day correlation</em> is the correlation between daily returns of the ETF (GLD or SLV) and the Binance perpetual (XAUUSDT or XAGUSDT) over the last 20 days. Values near 1 mean the two series move together; values near 0 mean no linear link. So we see how strongly gold/silver ETF and crypto perpetual prices co-move after the Binance launch. This metric exists only when both sides have data (post-event). Pre/post comparison is in the tables in section 4 and 6.</p>
+<p><strong>Single chart (gold and silver together):</strong> Same scale and dates so both lines are easy to compare. Y-axis is limited to the range where the data lies so the lines are not squeezed at the top. The vertical line is the <strong>event date</strong> — that is, the <strong>launch date</strong> of Binance XAUUSDT (2026-01-05). We use this single date as “the event” everywhere in the report. The SLV–XAG line starts later than GLD–XAU because XAGUSDT was listed a few days after XAUUSDT, so the 20-day rolling window has enough data only from a later date.</p>
+<div id="19257252" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="aa74a048" class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display" data-execution_count="11">
 <div>
 
 
@@ -539,11 +551,11 @@ Name: count, dtype: int64</code></pre>
 <section id="correlogram" class="level3">
 <h3 class="anchored" data-anchor-id="correlogram">3.3 Correlogram</h3>
 <p>We compute the correlation matrix for a set of variables that are meaningful for the analysis: returns, volatility measures, integration (rolling correlation/beta), liquidity proxies, controls and the event dummy. Only numeric series with sufficient non-missing overlap are included.</p>
-<div id="c44f568c" class="cell" data-execution_count="12">
+<div id="f092a472" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -555,17 +567,17 @@ Name: count, dtype: int64</code></pre>
 <h2 class="anchored" data-anchor-id="eventstudy-style-comparison">4. Event‑study style comparison</h2>
 <p>We compare average volatility, volume and integration measures before and after the futures launch. The event date is 2026-01-05 (Binance XAUUSDT TRADFI launch).</p>
 <p><strong>Pre vs post distributions</strong> for key metrics (boxplots by period):</p>
-<div id="e416a326" class="cell" data-execution_count="14">
+<div id="c6d3b6d0" class="cell" data-execution_count="15">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-16-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<div id="f8851c0a" class="cell" data-execution_count="15">
-<div class="cell-output cell-output-display" data-execution_count="15">
+<div id="047cf4eb" class="cell" data-execution_count="16">
+<div class="cell-output cell-output-display" data-execution_count="16">
 <div>
 
 
@@ -717,8 +729,8 @@ Name: count, dtype: int64</code></pre>
 </div>
 <p><strong>Comment.</strong> Compare the “pre” and “post” rows for each metric. If the post mean is higher than the pre mean for volatility or correlation, that points to an increase after the event. For volume, higher post means more trading. For liquidity (Amihud), lower post means better liquidity.</p>
 <p>For a more formal comparison we can run simple t‑tests.</p>
-<div id="1246c41e" class="cell" data-execution_count="16">
-<div class="cell-output cell-output-display" data-execution_count="16">
+<div id="8ddbf8bb" class="cell" data-execution_count="17">
+<div class="cell-output cell-output-display" data-execution_count="17">
 <div>
 
 
@@ -791,8 +803,8 @@ Name: count, dtype: int64</code></pre>
 <section id="simple-regression-models" class="level2">
 <h2 class="anchored" data-anchor-id="simple-regression-models">5. Simple regression models</h2>
 <p>We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns.</p>
-<div id="7c60a1cf" class="cell" data-execution_count="17">
-<div class="cell-output cell-output-display" data-execution_count="17">
+<div id="c12bf633" class="cell" data-execution_count="18">
+<div class="cell-output cell-output-display" data-execution_count="18">
 <div>
 
 
@@ -869,7 +881,7 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="d198099e" class="cell" data-execution_count="18">
+<div id="44d316f8" class="cell" data-execution_count="19">
 <div class="cell-output cell-output-stdout">
 <pre><code>==============================================================================
                  coef    std err          t      P&gt;|t|      [0.025      0.975]
@@ -894,7 +906,7 @@ tnx_ret       -0.0560      0.178     -0.315      0.753      -0.409       0.297
 </div>
 <p><strong>Comment.</strong> The <code>post_event</code> coefficient is the main result: it shows how much volatility changed after the launch, once we control for DXY, VIX and 10Y yield changes. If it is positive and the p-value (P&gt;|t|) is below 0.05, we conclude that volatility increased after the event (H1 supported for that ETF).</p>
 <p>If needed, we can also model absolute returns as a simple proxy for volatility:</p>
-<div id="5ed51e14" class="cell" data-execution_count="19">
+<div id="d093a028" class="cell" data-execution_count="20">
 <div class="cell-output cell-output-stdout">
 <pre><code>==============================================================================
                  coef    std err          t      P&gt;|t|      [0.025      0.975]
@@ -923,8 +935,8 @@ tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
 <section id="key-results-summary" class="level3">
 <h3 class="anchored" data-anchor-id="key-results-summary">6.1 Key results summary</h3>
 <p>The table below summarizes pre- vs post-event means, t-test p-values, and the regression coefficient on <code>post_event</code> (with DXY, VIX and 10Y yield changes as controls) for the main outcome variables.</p>
-<div id="d3d966c5" class="cell" data-execution_count="20">
-<div class="cell-output cell-output-display" data-execution_count="20">
+<div id="af7332d3" class="cell" data-execution_count="21">
+<div class="cell-output cell-output-display" data-execution_count="21">
 <div>
 
 
@@ -1023,7 +1035,7 @@ tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
 </section>
 <section id="empirical-results" class="level3">
 <h3 class="anchored" data-anchor-id="empirical-results">6.2 Empirical results</h3>
-<div id="5cde62a9" class="cell" data-execution_count="21">
+<div id="7fed0d81" class="cell" data-execution_count="22">
 <div class="cell-output cell-output-stdout">
 <pre><code>**Volatility (H1):** After controlling for DXY, VIX and 10Y yield changes, the post-event coefficient in the GLD 20-day volatility regression is 0.00753 (p = 0.000), so volatility increased post launch and the effect is significant at the 5% level.
 
@@ -1039,7 +1051,7 @@ For SLV, the post_event coefficient is 0.03500 (p = 0.000): volatility increased
 <section id="conclusions-on-hypotheses" class="level3">
 <h3 class="anchored" data-anchor-id="conclusions-on-hypotheses">6.3 Conclusions on hypotheses</h3>
 <p>Using the key-results table and regressions above, we state whether each hypothesis is supported or not.</p>
-<div id="3b1e8c86" class="cell" data-execution_count="22">
+<div id="cff68857" class="cell" data-execution_count="23">
 <div class="cell-output cell-output-stdout">
 <pre><code>H1 (volatility increase after launch):
   GLD: supported (positive and significant post_event means higher volatility).
