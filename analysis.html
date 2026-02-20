@@ -78,35 +78,36 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="introduction-and-research-question">1. Introduction and research question</h2>
 <p><strong>Research question.</strong><br>
 Did the introduction of Binance TRADFI gold and silver perpetual futures change volatility, liquidity and price integration in the corresponding precious metal ETF markets (GLD and SLV)?</p>
-<p><strong>Main hypotheses.</strong></p>
+<p><strong>Main hypotheses (testable with pre/post data).</strong></p>
 <ul>
 <li><strong>H1 (volatility)</strong>: Realized volatility of gold and silver ETFs increased after the launch of Binance XAUUSDT and XAGUSDT TRADFI perpetual futures.</li>
 <li><strong>H2 (liquidity)</strong>: Trading activity and liquidity of GLD and SLV improved (higher volume, lower Amihud illiquidity) after the launch.</li>
-<li><strong>H3 (integration)</strong>: Short‑run price co‑movement and beta of GLD/SLV with Binance XAUUSDT/XAGUSDT returns increased after the launch.</li>
 </ul>
+<p>We do <em>not</em> formulate a formal hypothesis on “integration increased”, because Binance returns do not exist before the launch, so we cannot compute pre-event GLD–XAU or SLV–XAG correlation or beta. We still report post-event rolling correlation and integration metrics as <strong>descriptive</strong> evidence (how strongly ETF and perpetual co-move after the launch), but we do not test a pre/post change for integration.</p>
+<p><strong>How we identify the impact on the market.</strong> We use an <strong>event study</strong> with (i) pre/post comparison of means and t-tests, and (ii) <strong>OLS regressions</strong> where the outcome is volatility (or liquidity proxy) and the key regressor is a <strong>post-event dummy</strong> (<code>post_event</code> = 1 after the launch date), plus controls (DXY, VIX, 10Y yield changes). The coefficient on <code>post_event</code> is our estimate of the change in the outcome after the launch, conditional on controls. We do not have a control group (e.g.&nbsp;other assets without a new derivative), so we do not use difference-in-differences; the design is a single-market before/after event study with controls. See <code>Literature/LITERATURE_METHODS.md</code> for a comparison with the Bitcoin futures paper (Augustin et al., Management Science 2023), which uses DiD.</p>
 </section>
 <section id="data-and-feature-set" class="level2">
 <h2 class="anchored" data-anchor-id="data-and-feature-set">2. Data and feature set</h2>
 <p>We use three pre‑built datasets produced by <code>build_features.py</code>:</p>
 <ul>
-<li><strong>Daily panel</strong> (<code>features_daily.csv</code>): 112 trading days, 85 variables. Used for the event study (pre/post comparison, regressions).</li>
+<li><strong>Daily panel</strong> (<code>features_daily.csv</code>): 118 trading days, 87 variables. Used for the event study (pre/post comparison, regressions).</li>
 <li><strong>Hourly panel</strong> (<code>features_hourly.csv</code>): one row per hour over the same calendar span; Binance 1m aggregated to hourly, ETF/controls forward-filled from daily.</li>
 <li><strong>1-minute panel</strong> (<code>features_1m.csv</code>): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used to satisfy the course requirement of <strong>≥10,000 observations</strong>.</li>
 </ul>
-<p>Raw data sources and variable definitions are in <code>DATA_DESCRIPTION.md</code>, <code>VARIABLES_DESCRIPTION.md</code>, and <code>DATA_ROW_COUNTS_AND_PERIODS.md</code>.</p>
-<div id="1db0edbe" class="cell" data-execution_count="1">
+<p>Raw data sources and variable definitions are in <code>DATA_DESCRIPTION.md</code>, <code>VARIABLES_DESCRIPTION.md</code>, and <code>DATA_ROW_COUNTS_AND_PERIODS.md</code>. A mapping of which variables are used where (and how to extend usage) is in <code>VARIABLE_USAGE.md</code>.</p>
+<div id="baac29d2" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-stdout">
-<pre><code>Daily: 112 rows (features_daily.csv)
-Hourly: 3888 rows (features_hourly.csv)
-1-minute: 53864 rows (features_1m.csv)</code></pre>
+<pre><code>Daily: 118 rows (features_daily.csv)
+Hourly: 4104 rows (features_hourly.csv)
+1-minute: 67074 rows (features_1m.csv)</code></pre>
 </div>
 </div>
-<div id="d9e72b91" class="cell" data-execution_count="2">
+<div id="e5aa0ba9" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display" data-execution_count="2">
-<pre><code>(112, 85)</code></pre>
+<pre><code>(118, 89)</code></pre>
 </div>
 </div>
-<div id="f2d6dc4e" class="cell" data-execution_count="3">
+<div id="aaa69d01" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display" data-execution_count="3">
 <div>
 
@@ -126,7 +127,6 @@ Hourly: 3888 rows (features_hourly.csv)
 <th data-quarto-table-cell-role="th">px_slv_close</th>
 <th data-quarto-table-cell-role="th">vol_slv</th>
 <th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">amihud_20_slv</th>
 <th data-quarto-table-cell-role="th">funding_xau_change</th>
 <th data-quarto-table-cell-role="th">funding_extreme_xau</th>
 <th data-quarto-table-cell-role="th">oi_xau_change</th>
@@ -136,6 +136,7 @@ Hourly: 3888 rows (features_hourly.csv)
 <th data-quarto-table-cell-role="th">dxy_ret</th>
 <th data-quarto-table-cell-role="th">vix_ret</th>
 <th data-quarto-table-cell-role="th">tnx_ret</th>
+<th data-quarto-table-cell-role="th">dgs10_ret</th>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Date</th>
@@ -177,11 +178,11 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>35875300.0</td>
 <td>...</td>
 <td>NaN</td>
-<td>NaN</td>
 <td>0</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>0</td>
+<td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -201,7 +202,6 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>27291200.0</td>
 <td>...</td>
 <td>NaN</td>
-<td>NaN</td>
 <td>0</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -210,6 +210,7 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>-0.002646</td>
 <td>-0.048936</td>
 <td>-0.015552</td>
+<td>-0.014118</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2025-09-04</td>
@@ -225,7 +226,6 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>45258500.0</td>
 <td>...</td>
 <td>NaN</td>
-<td>NaN</td>
 <td>0</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -234,6 +234,7 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>0.002138</td>
 <td>-0.066375</td>
 <td>-0.008346</td>
+<td>-0.011919</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">2025-09-05</td>
@@ -249,7 +250,6 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>25435500.0</td>
 <td>...</td>
 <td>NaN</td>
-<td>NaN</td>
 <td>0</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -258,6 +258,7 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>-0.005915</td>
 <td>-0.007874</td>
 <td>-0.021787</td>
+<td>-0.016929</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2025-09-08</td>
@@ -273,7 +274,6 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>25019700.0</td>
 <td>...</td>
 <td>NaN</td>
-<td>NaN</td>
 <td>0</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -282,11 +282,12 @@ Hourly: 3888 rows (features_hourly.csv)
 <td>-0.003278</td>
 <td>-0.004622</td>
 <td>-0.009838</td>
+<td>-0.012270</td>
 </tr>
 </tbody>
 </table>
 
-<p>5 rows × 85 columns</p>
+<p>5 rows × 89 columns</p>
 </div>
 </div>
 </div>
@@ -294,107 +295,111 @@ Hourly: 3888 rows (features_hourly.csv)
 <h3 class="anchored" data-anchor-id="basic-cleaning-and-event-date">2.1 Basic cleaning and event date</h3>
 <p>We define the <strong>event</strong> as the <strong>launch</strong> of Binance XAUUSDT TRADFI perpetual futures. So there is one date: 2026‑01‑05 (event = launch).<br>
 To keep a meaningful pre‑event window, we only require that ETF prices and returns are available; Binance‑specific fields are allowed to be missing before the launch.</p>
-<div id="4ebcaaff" class="cell" data-execution_count="4">
+<div id="2f37f69f" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-stdout">
-<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
-DatetimeIndex: 111 entries, 2025-09-03 to 2026-02-10
-Data columns (total 85 columns):
+<pre><code>&lt;class 'pandas.DataFrame'&gt;
+DatetimeIndex: 117 entries, 2025-09-03 to 2026-02-19
+Data columns (total 89 columns):
  #   Column                           Non-Null Count  Dtype  
 ---  ------                           --------------  -----  
- 0   px_gld_open                      111 non-null    float64
- 1   px_gld_high                      111 non-null    float64
- 2   px_gld_low                       111 non-null    float64
- 3   px_gld_close                     111 non-null    float64
- 4   vol_gld                          111 non-null    float64
- 5   px_slv_open                      111 non-null    float64
- 6   px_slv_high                      111 non-null    float64
- 7   px_slv_low                       111 non-null    float64
- 8   px_slv_close                     111 non-null    float64
- 9   vol_slv                          111 non-null    float64
- 10  dxy                              111 non-null    float64
- 11  vix                              111 non-null    float64
- 12  tnx                              111 non-null    float64
- 13  px_xau_binance_open              26 non-null     float64
- 14  px_xau_binance_high              26 non-null     float64
- 15  px_xau_binance_low               26 non-null     float64
- 16  px_xau_binance_close             26 non-null     float64
- 17  px_xau_binance_volume            26 non-null     float64
- 18  px_xau_binance_num_trades        26 non-null     float64
- 19  px_xag_binance_open              23 non-null     float64
- 20  px_xag_binance_high              23 non-null     float64
- 21  px_xag_binance_low               23 non-null     float64
- 22  px_xag_binance_close             23 non-null     float64
- 23  px_xag_binance_volume            23 non-null     float64
- 24  px_xag_binance_num_trades        23 non-null     float64
- 25  funding_xau                      22 non-null     float64
- 26  funding_mark_xau                 22 non-null     float64
- 27  funding_xag                      22 non-null     float64
- 28  funding_mark_xag                 22 non-null     float64
- 29  oi_xau                           0 non-null      float64
- 30  oi_xag                           0 non-null      float64
- 31  ret_xau_binance                  25 non-null     float64
- 32  ret_xag_binance                  22 non-null     float64
- 33  ret_gld                          111 non-null    float64
- 34  ret_slv                          111 non-null    float64
- 35  ret_xau_binance_abs              25 non-null     float64
- 36  ret_xau_binance_sq               25 non-null     float64
- 37  ret_xag_binance_abs              22 non-null     float64
- 38  ret_xag_binance_sq               22 non-null     float64
- 39  ret_gld_abs                      111 non-null    float64
- 40  ret_gld_sq                       111 non-null    float64
- 41  ret_slv_abs                      111 non-null    float64
- 42  ret_slv_sq                       111 non-null    float64
- 43  vol_realized_10_ret_xau_binance  16 non-null     float64
- 44  vol_realized_20_ret_xau_binance  6 non-null      float64
- 45  vol_realized_10_ret_xag_binance  13 non-null     float64
- 46  vol_realized_20_ret_xag_binance  3 non-null      float64
- 47  vol_realized_10_ret_gld          102 non-null    float64
- 48  vol_realized_20_ret_gld          92 non-null     float64
- 49  vol_realized_10_ret_slv          102 non-null    float64
- 50  vol_realized_20_ret_slv          92 non-null     float64
- 51  vol_parkinson_gld                93 non-null     float64
- 52  vol_parkinson_slv                93 non-null     float64
- 53  vol_parkinson_xau_binance        7 non-null      float64
- 54  vol_parkinson_xag_binance        4 non-null      float64
- 55  vol_gk_gld                       93 non-null     float64
- 56  vol_gk_slv                       93 non-null     float64
- 57  vol_gk_xau_binance               7 non-null      float64
- 58  vol_gk_xag_binance               4 non-null      float64
- 59  corr_20_gld_xau                  6 non-null      float64
- 60  corr_20_slv_xag                  3 non-null      float64
- 61  beta_60_gld_on_xau               0 non-null      float64
- 62  beta_60_slv_on_xag               0 non-null      float64
- 63  vol_ratio_gld_xau                6 non-null      float64
- 64  vol_ratio_slv_xag                3 non-null      float64
- 65  abs_return_gap_gld_xau           25 non-null     float64
- 66  abs_return_gap_slv_xag           22 non-null     float64
- 67  post_event                       111 non-null    int64  
- 68  event_window_7                   111 non-null    int64  
- 69  event_window_14                  111 non-null    int64  
- 70  log_vol_gld                      111 non-null    float64
- 71  log_vol_slv                      111 non-null    float64
- 72  amihud_gld                       111 non-null    float64
- 73  amihud_20_gld                    92 non-null     float64
- 74  amihud_slv                       111 non-null    float64
- 75  amihud_20_slv                    92 non-null     float64
- 76  funding_xau_change               21 non-null     float64
- 77  funding_extreme_xau              111 non-null    int64  
- 78  oi_xau_change                    0 non-null      float64
- 79  funding_xag_change               21 non-null     float64
- 80  funding_extreme_xag              111 non-null    int64  
- 81  oi_xag_change                    0 non-null      float64
- 82  dxy_ret                          111 non-null    float64
- 83  vix_ret                          111 non-null    float64
- 84  tnx_ret                          111 non-null    float64
-dtypes: float64(80), int64(5)
-memory usage: 74.6 KB</code></pre>
+ 0   px_gld_open                      117 non-null    float64
+ 1   px_gld_high                      117 non-null    float64
+ 2   px_gld_low                       117 non-null    float64
+ 3   px_gld_close                     117 non-null    float64
+ 4   vol_gld                          117 non-null    float64
+ 5   px_slv_open                      117 non-null    float64
+ 6   px_slv_high                      117 non-null    float64
+ 7   px_slv_low                       117 non-null    float64
+ 8   px_slv_close                     117 non-null    float64
+ 9   vol_slv                          117 non-null    float64
+ 10  dxy                              117 non-null    float64
+ 11  vix                              117 non-null    float64
+ 12  tnx                              117 non-null    float64
+ 13  dgs10                            114 non-null    float64
+ 14  px_xau_binance_open              32 non-null     float64
+ 15  px_xau_binance_high              32 non-null     float64
+ 16  px_xau_binance_low               32 non-null     float64
+ 17  px_xau_binance_close             32 non-null     float64
+ 18  px_xau_binance_volume            32 non-null     float64
+ 19  px_xau_binance_num_trades        32 non-null     float64
+ 20  px_xag_binance_open              29 non-null     float64
+ 21  px_xag_binance_high              29 non-null     float64
+ 22  px_xag_binance_low               29 non-null     float64
+ 23  px_xag_binance_close             29 non-null     float64
+ 24  px_xag_binance_volume            29 non-null     float64
+ 25  px_xag_binance_num_trades        29 non-null     float64
+ 26  funding_xau                      22 non-null     float64
+ 27  funding_mark_xau                 22 non-null     float64
+ 28  funding_xag                      22 non-null     float64
+ 29  funding_mark_xag                 22 non-null     float64
+ 30  oi_xau                           0 non-null      float64
+ 31  oi_xag                           0 non-null      float64
+ 32  ret_xau_binance                  31 non-null     float64
+ 33  ret_xag_binance                  28 non-null     float64
+ 34  ret_gld                          117 non-null    float64
+ 35  ret_slv                          117 non-null    float64
+ 36  ret_xau_binance_abs              31 non-null     float64
+ 37  ret_xau_binance_sq               31 non-null     float64
+ 38  ret_xag_binance_abs              28 non-null     float64
+ 39  ret_xag_binance_sq               28 non-null     float64
+ 40  ret_gld_abs                      117 non-null    float64
+ 41  ret_gld_sq                       117 non-null    float64
+ 42  ret_slv_abs                      117 non-null    float64
+ 43  ret_slv_sq                       117 non-null    float64
+ 44  vol_realized_10_ret_xau_binance  22 non-null     float64
+ 45  vol_realized_20_ret_xau_binance  12 non-null     float64
+ 46  vol_realized_10_ret_xag_binance  19 non-null     float64
+ 47  vol_realized_20_ret_xag_binance  9 non-null      float64
+ 48  vol_realized_10_ret_gld          108 non-null    float64
+ 49  vol_realized_20_ret_gld          98 non-null     float64
+ 50  vol_realized_10_ret_slv          108 non-null    float64
+ 51  vol_realized_20_ret_slv          98 non-null     float64
+ 52  vol_parkinson_gld                99 non-null     float64
+ 53  vol_parkinson_slv                99 non-null     float64
+ 54  vol_parkinson_xau_binance        13 non-null     float64
+ 55  vol_parkinson_xag_binance        10 non-null     float64
+ 56  vol_gk_gld                       99 non-null     float64
+ 57  vol_gk_slv                       99 non-null     float64
+ 58  vol_gk_xau_binance               13 non-null     float64
+ 59  vol_gk_xag_binance               10 non-null     float64
+ 60  corr_20_gld_xau                  12 non-null     float64
+ 61  corr_20_slv_xag                  9 non-null      float64
+ 62  beta_60_gld_on_xau               0 non-null      float64
+ 63  beta_60_slv_on_xag               0 non-null      float64
+ 64  beta_20_gld_on_xau               12 non-null     float64
+ 65  beta_20_slv_on_xag               9 non-null      float64
+ 66  vol_ratio_gld_xau                12 non-null     float64
+ 67  vol_ratio_slv_xag                9 non-null      float64
+ 68  abs_return_gap_gld_xau           31 non-null     float64
+ 69  abs_return_gap_slv_xag           28 non-null     float64
+ 70  post_event                       117 non-null    int64  
+ 71  event_window_7                   117 non-null    int64  
+ 72  event_window_14                  117 non-null    int64  
+ 73  log_vol_gld                      117 non-null    float64
+ 74  log_vol_slv                      117 non-null    float64
+ 75  amihud_gld                       117 non-null    float64
+ 76  amihud_20_gld                    98 non-null     float64
+ 77  amihud_slv                       117 non-null    float64
+ 78  amihud_20_slv                    98 non-null     float64
+ 79  funding_xau_change               21 non-null     float64
+ 80  funding_extreme_xau              117 non-null    int64  
+ 81  oi_xau_change                    0 non-null      float64
+ 82  funding_xag_change               21 non-null     float64
+ 83  funding_extreme_xag              117 non-null    int64  
+ 84  oi_xag_change                    0 non-null      float64
+ 85  dxy_ret                          117 non-null    float64
+ 86  vix_ret                          117 non-null    float64
+ 87  tnx_ret                          117 non-null    float64
+ 88  dgs10_ret                        112 non-null    float64
+dtypes: float64(84), int64(5)
+memory usage: 82.3 KB</code></pre>
 </div>
 </div>
-<div id="db64ef63" class="cell" data-execution_count="5">
+<div id="1a033c47" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display" data-execution_count="5">
 <pre><code>post_event
 0             85
-1             26
+1             32
 Name: count, dtype: int64</code></pre>
 </div>
 </div>
@@ -404,7 +409,7 @@ Name: count, dtype: int64</code></pre>
 <h2 class="anchored" data-anchor-id="descriptive-statistics">3. Descriptive statistics</h2>
 <section id="prices-and-returns" class="level3">
 <h3 class="anchored" data-anchor-id="prices-and-returns">3.1 Prices and returns</h3>
-<div id="5489233e" class="cell" data-execution_count="6">
+<div id="e0ba4618" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -414,7 +419,7 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 <p><strong>Cumulative returns</strong> (normalized to 100 at the first date): a clear view of relative performance and whether paths diverge after the event.</p>
-<div id="bb55880b" class="cell" data-execution_count="7">
+<div id="fd1a5b1f" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -423,8 +428,28 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="292ee687" class="cell" data-execution_count="8">
-<div class="cell-output cell-output-display" data-execution_count="8">
+<p><strong>Post-event integration in one picture:</strong> scatter of ETF daily returns vs Binance perpetual returns (post-event only). Points along the diagonal mean the two move together; the regression line and correlation summarize the link.</p>
+<div id="a2e6cfbf" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How the distribution of returns changed:</strong> pre- vs post-event density of daily returns. A wider (more dispersed) distribution after the event is consistent with higher volatility.</p>
+<div id="0936f6ad" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="0ddcab29" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
 
@@ -441,29 +466,29 @@ Name: count, dtype: int64</code></pre>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">ret_gld</td>
-<td>0.003160</td>
-<td>0.019440</td>
+<td>0.002946</td>
+<td>0.019728</td>
 <td>-0.108412</td>
 <td>0.061647</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">ret_slv</td>
-<td>0.006136</td>
-<td>0.048138</td>
+<td>0.005537</td>
+<td>0.049015</td>
 <td>-0.336037</td>
 <td>0.086602</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">ret_xau_binance</td>
-<td>0.005092</td>
-<td>0.034425</td>
+<td>0.003788</td>
+<td>0.032585</td>
 <td>-0.104457</td>
 <td>0.064529</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">ret_xag_binance</td>
-<td>0.002603</td>
-<td>0.106036</td>
+<td>0.000494</td>
+<td>0.097086</td>
 <td>-0.312222</td>
 <td>0.145629</td>
 </tr>
@@ -477,28 +502,39 @@ Name: count, dtype: int64</code></pre>
 <section id="volatility-and-liquidity-over-time" class="level3">
 <h3 class="anchored" data-anchor-id="volatility-and-liquidity-over-time">3.2 Volatility and liquidity over time</h3>
 <p>We look at 20‑day realized volatility for GLD and SLV and ETF trading volume.</p>
-<div id="ae85738c" class="cell" data-execution_count="9">
+<div id="ece769d8" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-12-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<p><strong>What this shows:</strong> The <em>rolling 20-day correlation</em> is the correlation between daily returns of the ETF (GLD or SLV) and the Binance perpetual (XAUUSDT or XAGUSDT) over the last 20 days. Values near 1 mean the two series move together; values near 0 mean no linear link. So we see how strongly gold/silver ETF and crypto perpetual prices co-move after the Binance launch. This metric exists only when both sides have data (post-event). Pre/post comparison is in the tables in section 4 and 6.</p>
+<p><strong>Why there is no pre-period for integration.</strong> The event is the <em>launch</em> of Binance XAUUSDT/XAGUSDT. Before that date there are no Binance prices or returns, so series like <code>corr_20_gld_xau</code> and <code>beta_60_gld_on_xau</code> (which need both ETF and Binance returns) are undefined before the launch. We therefore <strong>cannot</strong> estimate “integration before the event” in the same way we do for volatility or liquidity: there is no pre-period for Binance–ETF co-movement. We can only describe integration <em>after</em> the launch (level and evolution of rolling correlation) and, in the pre/post table, the “pre” mean for correlation is effectively missing or based on no data.</p>
+<p><strong>What this shows:</strong> The <em>rolling 20-day correlation</em> is the correlation between daily returns of the ETF (GLD or SLV) and the Binance perpetual (XAUUSDT or XAGUSDT) over the last 20 days. Values near 1 mean the two series move together. This metric exists only when both sides have data (post-event). The chart and the pre/post table in section 4 show post-event integration only; there is no comparable pre-event integration measure.</p>
 <p><strong>Single chart (gold and silver together):</strong> Same scale and dates so both lines are easy to compare. Y-axis is limited to the range where the data lies so the lines are not squeezed at the top. The vertical line is the <strong>event date</strong> — that is, the <strong>launch date</strong> of Binance XAUUSDT (2026-01-05). We use this single date as “the event” everywhere in the report. The SLV–XAG line starts later than GLD–XAU because XAGUSDT was listed a few days after XAUUSDT, so the 20-day rolling window has enough data only from a later date.</p>
-<div id="19257252" class="cell" data-execution_count="10">
+<div id="38138629" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<div id="aa74a048" class="cell" data-execution_count="11">
-<div class="cell-output cell-output-display" data-execution_count="11">
+<section id="minute-level-correlation-last-7-days" class="level4">
+<h4 class="anchored" data-anchor-id="minute-level-correlation-last-7-days">Minute-level correlation (last 7 days)</h4>
+<p>For the most recent 7 days we have <em>minute-level</em> data for both ETFs (Yahoo) and Binance. We merge on datetime and compute 1m returns to get a same-frequency measure of short-run co-movement.</p>
+<div id="9e2f0b5c" class="cell" data-execution_count="13">
+<div class="cell-output cell-output-stdout">
+<pre><code>Minute-level return correlation (last 7 days, overlapping 1m bars):
+  GLD–XAU: 0.9913
+  SLV–XAG: 0.9934</code></pre>
+</div>
+</div>
+<div id="48c8087c" class="cell" data-execution_count="14">
+<div class="cell-output cell-output-display" data-execution_count="14">
 <div>
 
 
@@ -515,29 +551,29 @@ Name: count, dtype: int64</code></pre>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">amihud_gld</td>
-<td>6.977909e-10</td>
-<td>5.506247e-10</td>
+<td>7.483538e-10</td>
+<td>6.085406e-10</td>
 <td>3.474315e-12</td>
-<td>2.390221e-09</td>
+<td>2.885031e-09</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">amihud_20_gld</td>
-<td>6.709650e-10</td>
-<td>1.040833e-10</td>
+<td>7.009107e-10</td>
+<td>1.577653e-10</td>
 <td>4.831240e-10</td>
-<td>9.406983e-10</td>
+<td>1.276925e-09</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">amihud_slv</td>
-<td>4.710888e-10</td>
-<td>3.304889e-10</td>
+<td>4.780433e-10</td>
+<td>3.276916e-10</td>
 <td>1.153311e-12</td>
 <td>2.008110e-09</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">amihud_20_slv</td>
-<td>4.803576e-10</td>
-<td>1.172749e-10</td>
+<td>4.779806e-10</td>
+<td>1.142224e-10</td>
 <td>2.962718e-10</td>
 <td>7.452803e-10</td>
 </tr>
@@ -548,14 +584,15 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </section>
+</section>
 <section id="correlogram" class="level3">
 <h3 class="anchored" data-anchor-id="correlogram">3.3 Correlogram</h3>
 <p>We compute the correlation matrix for a set of variables that are meaningful for the analysis: returns, volatility measures, integration (rolling correlation/beta), liquidity proxies, controls and the event dummy. Only numeric series with sufficient non-missing overlap are included.</p>
-<div id="f092a472" class="cell" data-execution_count="13">
+<div id="b1fb00b1" class="cell" data-execution_count="16">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-17-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -566,18 +603,38 @@ Name: count, dtype: int64</code></pre>
 <section id="eventstudy-style-comparison" class="level2">
 <h2 class="anchored" data-anchor-id="eventstudy-style-comparison">4. Event‑study style comparison</h2>
 <p>We compare average volatility, volume and integration measures before and after the futures launch. The event date is 2026-01-05 (Binance XAUUSDT TRADFI launch).</p>
-<p><strong>Pre vs post distributions</strong> for key metrics (boxplots by period):</p>
-<div id="c6d3b6d0" class="cell" data-execution_count="15">
+<p><strong>Pre vs post: main numbers at a glance.</strong> Bar chart of average volatility and volume before and after the event. The jump in the bars after the event is the “effect” we test in regressions.</p>
+<div id="cd0dd750" class="cell" data-execution_count="18">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="analysis_files/figure-html/cell-16-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="analysis_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<div id="047cf4eb" class="cell" data-execution_count="16">
-<div class="cell-output cell-output-display" data-execution_count="16">
+<p><strong>Dynamics around the event:</strong> average outcome by week relative to the launch (week 0 = event week). This shows whether the change is immediate or builds over time.</p>
+<div id="e33ebd7f" class="cell" data-execution_count="19">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-20-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Pre vs post distributions</strong> for key metrics (boxplots by period):</p>
+<div id="96a30bbb" class="cell" data-execution_count="20">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/cell-21-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="74f6bbfe" class="cell" data-execution_count="21">
+<div class="cell-output cell-output-display" data-execution_count="21">
 <div>
 
 
@@ -605,9 +662,9 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">1</td>
 <td>GLD 20d vol</td>
 <td>post</td>
-<td>2.084301e-02</td>
-<td>8.844632e-03</td>
-<td>26</td>
+<td>2.380297e-02</td>
+<td>1.011750e-02</td>
+<td>32</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -621,9 +678,9 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">3</td>
 <td>SLV 20d vol</td>
 <td>post</td>
-<td>5.884494e-02</td>
-<td>2.324772e-02</td>
-<td>26</td>
+<td>6.651057e-02</td>
+<td>2.643642e-02</td>
+<td>32</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">4</td>
@@ -637,9 +694,9 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">5</td>
 <td>GLD Parkinson vol</td>
 <td>post</td>
-<td>1.181838e-02</td>
-<td>5.792720e-03</td>
-<td>26</td>
+<td>1.357468e-02</td>
+<td>6.393080e-03</td>
+<td>32</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">6</td>
@@ -653,9 +710,9 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">7</td>
 <td>SLV Parkinson vol</td>
 <td>post</td>
-<td>3.233210e-02</td>
-<td>1.407079e-02</td>
-<td>26</td>
+<td>3.669129e-02</td>
+<td>1.564470e-02</td>
+<td>32</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">8</td>
@@ -669,9 +726,9 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">9</td>
 <td>GLD volume</td>
 <td>post</td>
-<td>2.534337e+07</td>
-<td>1.859671e+07</td>
-<td>26</td>
+<td>2.289424e+07</td>
+<td>1.756732e+07</td>
+<td>32</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">10</td>
@@ -685,9 +742,9 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">11</td>
 <td>SLV volume</td>
 <td>post</td>
-<td>1.591018e+08</td>
-<td>1.001239e+08</td>
-<td>26</td>
+<td>1.439370e+08</td>
+<td>9.608540e+07</td>
+<td>32</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">12</td>
@@ -701,9 +758,9 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">13</td>
 <td>corr_20_gld_xau</td>
 <td>post</td>
-<td>9.213689e-01</td>
-<td>1.339276e-02</td>
-<td>6</td>
+<td>9.173261e-01</td>
+<td>1.028615e-02</td>
+<td>12</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">14</td>
@@ -717,9 +774,169 @@ Name: count, dtype: int64</code></pre>
 <td data-quarto-table-cell-role="th">15</td>
 <td>corr_20_slv_xag</td>
 <td>post</td>
-<td>9.354342e-01</td>
-<td>2.670531e-03</td>
-<td>3</td>
+<td>9.342025e-01</td>
+<td>1.902024e-03</td>
+<td>9</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>Amihud GLD</td>
+<td>pre</td>
+<td>6.216244e-10</td>
+<td>4.884536e-10</td>
+<td>85</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">17</td>
+<td>Amihud GLD</td>
+<td>post</td>
+<td>1.084979e-09</td>
+<td>7.604065e-10</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">18</td>
+<td>Amihud SLV</td>
+<td>pre</td>
+<td>4.955923e-10</td>
+<td>3.477594e-10</td>
+<td>85</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">19</td>
+<td>Amihud SLV</td>
+<td>post</td>
+<td>4.314288e-10</td>
+<td>2.665129e-10</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">20</td>
+<td>GLD GK vol</td>
+<td>pre</td>
+<td>8.847988e-03</td>
+<td>1.160877e-03</td>
+<td>67</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">21</td>
+<td>GLD GK vol</td>
+<td>post</td>
+<td>1.430969e-02</td>
+<td>6.899277e-03</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">22</td>
+<td>SLV GK vol</td>
+<td>pre</td>
+<td>1.677668e-02</td>
+<td>2.682417e-03</td>
+<td>67</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">23</td>
+<td>SLV GK vol</td>
+<td>post</td>
+<td>3.813931e-02</td>
+<td>1.648899e-02</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">24</td>
+<td>GLD 10d vol</td>
+<td>pre</td>
+<td>1.237271e-02</td>
+<td>7.157956e-03</td>
+<td>76</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">25</td>
+<td>GLD 10d vol</td>
+<td>post</td>
+<td>2.663677e-02</td>
+<td>1.480021e-02</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">26</td>
+<td>SLV 10d vol</td>
+<td>pre</td>
+<td>2.371003e-02</td>
+<td>8.887656e-03</td>
+<td>76</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">27</td>
+<td>SLV 10d vol</td>
+<td>post</td>
+<td>7.482800e-02</td>
+<td>3.756976e-02</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">28</td>
+<td>beta_60_gld_on_xau</td>
+<td>pre</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">29</td>
+<td>beta_60_gld_on_xau</td>
+<td>post</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">30</td>
+<td>beta_60_slv_on_xag</td>
+<td>pre</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">31</td>
+<td>beta_60_slv_on_xag</td>
+<td>post</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">32</td>
+<td>Beta 20d GLD/XAU</td>
+<td>pre</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">33</td>
+<td>Beta 20d GLD/XAU</td>
+<td>post</td>
+<td>8.634334e-01</td>
+<td>4.255616e-02</td>
+<td>12</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">34</td>
+<td>Beta 20d SLV/XAG</td>
+<td>pre</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">35</td>
+<td>Beta 20d SLV/XAG</td>
+<td>post</td>
+<td>8.298093e-01</td>
+<td>6.994691e-03</td>
+<td>9</td>
 </tr>
 </tbody>
 </table>
@@ -729,8 +946,8 @@ Name: count, dtype: int64</code></pre>
 </div>
 <p><strong>Comment.</strong> Compare the “pre” and “post” rows for each metric. If the post mean is higher than the pre mean for volatility or correlation, that points to an increase after the event. For volume, higher post means more trading. For liquidity (Amihud), lower post means better liquidity.</p>
 <p>For a more formal comparison we can run simple t‑tests.</p>
-<div id="8ddbf8bb" class="cell" data-execution_count="17">
-<div class="cell-output cell-output-display" data-execution_count="17">
+<div id="a1810b59" class="cell" data-execution_count="22">
+<div class="cell-output cell-output-display" data-execution_count="22">
 <div>
 
 
@@ -747,48 +964,108 @@ Name: count, dtype: int64</code></pre>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
 <td>GLD 20d vol</td>
-<td>3.921186</td>
-<td>3.965328e-04</td>
+<td>5.347993</td>
+<td>3.390943e-06</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
 <td>SLV 20d vol</td>
-<td>7.515452</td>
-<td>5.090965e-08</td>
+<td>8.955992</td>
+<td>2.629522e-10</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
 <td>GLD Parkinson vol</td>
-<td>2.738718</td>
-<td>1.095236e-02</td>
+<td>4.288773</td>
+<td>1.510642e-04</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">3</td>
 <td>SLV Parkinson vol</td>
-<td>5.789406</td>
-<td>4.466060e-06</td>
+<td>7.342943</td>
+<td>2.473673e-08</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">4</td>
-<td>GLD volume</td>
-<td>2.705857</td>
-<td>1.134125e-02</td>
+<td>GLD GK vol</td>
+<td>4.448184</td>
+<td>9.884403e-05</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">5</td>
-<td>SLV volume</td>
-<td>5.802084</td>
-<td>4.025468e-06</td>
+<td>SLV GK vol</td>
+<td>7.282962</td>
+<td>2.929140e-08</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">6</td>
+<td>GLD 10d vol</td>
+<td>5.201790</td>
+<td>7.418222e-06</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>SLV 10d vol</td>
+<td>7.607690</td>
+<td>1.040742e-08</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>GLD volume</td>
+<td>2.385871</td>
+<td>2.221668e-02</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>SLV volume</td>
+<td>5.802936</td>
+<td>1.743247e-06</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>Amihud GLD</td>
+<td>3.206915</td>
+<td>2.601864e-03</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>Amihud SLV</td>
+<td>-1.063142</td>
+<td>2.912466e-01</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
 <td>corr_20_gld_xau</td>
 <td>NaN</td>
 <td>NaN</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th">7</td>
+<td data-quarto-table-cell-role="th">13</td>
 <td>corr_20_slv_xag</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">14</td>
+<td>beta_60_gld_on_xau</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>beta_60_slv_on_xag</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>Beta 20d GLD/XAU</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">17</td>
+<td>Beta 20d SLV/XAG</td>
 <td>NaN</td>
 <td>NaN</td>
 </tr>
@@ -798,13 +1075,189 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<p><strong>Comment.</strong> A low p-value (e.g.&nbsp;below 0.05) means the difference between pre and post is statistically significant. Use this together with the pre/post means to say whether the change is meaningful.</p>
+<p><strong>Comment.</strong> A low p-value (e.g.&nbsp;below 0.05) means the difference between pre and post is statistically significant. We use <strong>Welch’s t-test</strong> (unequal variances, <code>equal_var=False</code>) because pre and post variances often differ.</p>
+<section id="statistical-validation-full-t-test-table-and-levene-test" class="level4">
+<h4 class="anchored" data-anchor-id="statistical-validation-full-t-test-table-and-levene-test">Statistical validation: full t-test table and Levene test</h4>
+<p>Below we report <strong>Welch t-test</strong> (difference in means) and <strong>Levene test</strong> (difference in variances) for all metrics that have both pre and post data. Significance levels: * 10%, ** 5%, *** 1%.</p>
+<div id="2656213a" class="cell" data-execution_count="23">
+<div class="cell-output cell-output-display" data-execution_count="23">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Metric</th>
+<th data-quarto-table-cell-role="th">Pre n</th>
+<th data-quarto-table-cell-role="th">Post n</th>
+<th data-quarto-table-cell-role="th">Pre mean</th>
+<th data-quarto-table-cell-role="th">Post mean</th>
+<th data-quarto-table-cell-role="th">t (Welch)</th>
+<th data-quarto-table-cell-role="th">t-test p</th>
+<th data-quarto-table-cell-role="th">Sig.</th>
+<th data-quarto-table-cell-role="th">Levene p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>GLD 20d vol</td>
+<td>66</td>
+<td>32</td>
+<td>1.343900e-02</td>
+<td>2.380300e-02</td>
+<td>5.3480</td>
+<td>0.0000</td>
+<td>***</td>
+<td>0.0020</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>SLV 20d vol</td>
+<td>66</td>
+<td>32</td>
+<td>2.411400e-02</td>
+<td>6.651100e-02</td>
+<td>8.9560</td>
+<td>0.0000</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>GLD Parkinson vol</td>
+<td>67</td>
+<td>32</td>
+<td>8.671000e-03</td>
+<td>1.357500e-02</td>
+<td>4.2888</td>
+<td>0.0002</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>SLV Parkinson vol</td>
+<td>67</td>
+<td>32</td>
+<td>1.625300e-02</td>
+<td>3.669100e-02</td>
+<td>7.3429</td>
+<td>0.0000</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>GLD GK vol</td>
+<td>67</td>
+<td>32</td>
+<td>8.848000e-03</td>
+<td>1.431000e-02</td>
+<td>4.4482</td>
+<td>0.0001</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>SLV GK vol</td>
+<td>67</td>
+<td>32</td>
+<td>1.677700e-02</td>
+<td>3.813900e-02</td>
+<td>7.2830</td>
+<td>0.0000</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>GLD 10d vol</td>
+<td>76</td>
+<td>32</td>
+<td>1.237300e-02</td>
+<td>2.663700e-02</td>
+<td>5.2018</td>
+<td>0.0000</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>SLV 10d vol</td>
+<td>76</td>
+<td>32</td>
+<td>2.371000e-02</td>
+<td>7.482800e-02</td>
+<td>7.6077</td>
+<td>0.0000</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>GLD volume</td>
+<td>85</td>
+<td>32</td>
+<td>1.512372e+07</td>
+<td>2.289424e+07</td>
+<td>2.3859</td>
+<td>0.0222</td>
+<td>**</td>
+<td>0.0086</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>SLV volume</td>
+<td>85</td>
+<td>32</td>
+<td>4.388922e+07</td>
+<td>1.439370e+08</td>
+<td>5.8029</td>
+<td>0.0000</td>
+<td>***</td>
+<td>0.0000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>Amihud GLD</td>
+<td>85</td>
+<td>32</td>
+<td>0.000000e+00</td>
+<td>0.000000e+00</td>
+<td>3.2069</td>
+<td>0.0026</td>
+<td>***</td>
+<td>0.0067</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>Amihud SLV</td>
+<td>85</td>
+<td>32</td>
+<td>0.000000e+00</td>
+<td>0.000000e+00</td>
+<td>-1.0631</td>
+<td>0.2912</td>
+<td></td>
+<td>0.4630</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p><strong>Comment.</strong> Levene p &lt; 0.05 indicates that variances differ between pre and post (e.g.&nbsp;higher volatility in post implies more spread), which supports using Welch’s t-test instead of the standard equal-variance t-test.</p>
+</section>
 </section>
 <section id="simple-regression-models" class="level2">
 <h2 class="anchored" data-anchor-id="simple-regression-models">5. Simple regression models</h2>
-<p>We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns.</p>
-<div id="c12bf633" class="cell" data-execution_count="18">
-<div class="cell-output cell-output-display" data-execution_count="18">
+<p>We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns. Following the literature (e.g.&nbsp;Augustin et al.), we winsorize outcome variables at 5% and 95% to reduce the influence of outliers, and report HAC (Newey–West) standard errors to allow for autocorrelation in daily data.</p>
+<div id="0d8993ec" class="cell" data-execution_count="24">
+<div class="cell-output cell-output-display" data-execution_count="24">
 <div>
 
 
@@ -881,51 +1334,104 @@ Name: count, dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="44d316f8" class="cell" data-execution_count="19">
+<div id="328d5da3" class="cell" data-execution_count="25">
 <div class="cell-output cell-output-stdout">
 <pre><code>==============================================================================
-                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
 ------------------------------------------------------------------------------
-const          0.0134      0.001     15.519      0.000       0.012       0.015
-post_event     0.0075      0.002      4.600      0.000       0.004       0.011
-dxy_ret        0.2238      0.236      0.947      0.346      -0.246       0.694
-vix_ret        0.0036      0.009      0.383      0.703      -0.015       0.022
-tnx_ret       -0.0053      0.093     -0.057      0.955      -0.189       0.179
+const          0.0133      0.002      7.862      0.000       0.010       0.017
+post_event     0.0099      0.004      2.458      0.014       0.002       0.018
+dxy_ret        0.4099      0.267      1.536      0.125      -0.113       0.933
+vix_ret        0.0040      0.007      0.574      0.566      -0.010       0.018
+tnx_ret        0.0475      0.219      0.217      0.828      -0.382       0.477
+dgs10_ret     -0.0872      0.219     -0.398      0.691      -0.517       0.343
 ==============================================================================
 
 ==============================================================================
-                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
 ------------------------------------------------------------------------------
-const          0.0241      0.002     14.512      0.000       0.021       0.027
-post_event     0.0350      0.003     11.148      0.000       0.029       0.041
-dxy_ret        0.3997      0.454      0.881      0.381      -0.502       1.301
-vix_ret       -0.0017      0.018     -0.095      0.924      -0.037       0.034
-tnx_ret       -0.0560      0.178     -0.315      0.753      -0.409       0.297
+const          0.0242      0.002     14.149      0.000       0.021       0.028
+post_event     0.0410      0.010      4.153      0.000       0.022       0.060
+dxy_ret        0.8894      0.681      1.307      0.191      -0.445       2.224
+vix_ret       -0.0008      0.015     -0.053      0.958      -0.030       0.029
+tnx_ret        0.0597      0.482      0.124      0.901      -0.886       1.005
+dgs10_ret     -0.2373      0.517     -0.459      0.646      -1.250       0.775
 ==============================================================================</code></pre>
 </div>
 </div>
 <p><strong>Comment.</strong> The <code>post_event</code> coefficient is the main result: it shows how much volatility changed after the launch, once we control for DXY, VIX and 10Y yield changes. If it is positive and the p-value (P&gt;|t|) is below 0.05, we conclude that volatility increased after the event (H1 supported for that ETF).</p>
 <p>If needed, we can also model absolute returns as a simple proxy for volatility:</p>
-<div id="d093a028" class="cell" data-execution_count="20">
+<div id="ba83d5b3" class="cell" data-execution_count="26">
 <div class="cell-output cell-output-stdout">
 <pre><code>==============================================================================
-                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
 ------------------------------------------------------------------------------
-const          0.0097      0.002      6.238      0.000       0.007       0.013
-post_event     0.0124      0.003      3.842      0.000       0.006       0.019
-dxy_ret        0.6160      0.433      1.422      0.158      -0.243       1.475
-vix_ret        0.0068      0.018      0.370      0.712      -0.030       0.043
-tnx_ret       -0.0439      0.171     -0.257      0.798      -0.383       0.295
+const          0.0091      0.001      7.575      0.000       0.007       0.012
+post_event     0.0099      0.003      3.343      0.001       0.004       0.016
+dxy_ret        0.0588      0.330      0.178      0.859      -0.588       0.705
+vix_ret        0.0043      0.012      0.361      0.718      -0.019       0.028
+tnx_ret        0.2460      0.312      0.789      0.430      -0.365       0.857
+dgs10_ret     -0.2769      0.277     -1.000      0.318      -0.820       0.266
 ==============================================================================
 
 ==============================================================================
-                 coef    std err          t      P&gt;|t|      [0.025      0.975]
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
 ------------------------------------------------------------------------------
-const          0.0211      0.004      5.582      0.000       0.014       0.029
-post_event     0.0379      0.008      4.838      0.000       0.022       0.053
-dxy_ret        2.0522      1.050      1.954      0.053      -0.030       4.134
-vix_ret        0.0416      0.045      0.933      0.353      -0.047       0.130
-tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
+const          0.0206      0.003      7.928      0.000       0.016       0.026
+post_event     0.0246      0.004      6.232      0.000       0.017       0.032
+dxy_ret       -0.1863      0.462     -0.403      0.687      -1.092       0.719
+vix_ret        0.0137      0.020      0.668      0.504      -0.026       0.054
+tnx_ret        1.0722      0.453      2.368      0.018       0.185       1.960
+dgs10_ret     -0.8386      0.500     -1.677      0.094      -1.819       0.142
+==============================================================================</code></pre>
+</div>
+</div>
+<p><strong>Liquidity (H2):</strong> we also regress Amihud illiquidity and log(volume) on the event and controls. A negative coefficient on <code>post_event</code> for Amihud would indicate improved liquidity (lower illiquidity) after the launch; a positive coefficient for log_vol would indicate higher volume.</p>
+<div id="9893d660" class="cell" data-execution_count="27">
+<div class="cell-output cell-output-stdout">
+<pre><code>Amihud GLD:
+==============================================================================
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+const       6.156e-10   5.09e-11     12.105      0.000    5.16e-10    7.15e-10
+post_event   4.42e-10   1.93e-10      2.290      0.022    6.37e-11     8.2e-10
+dxy_ret    -8.505e-09   1.66e-08     -0.513      0.608    -4.1e-08     2.4e-08
+vix_ret     1.167e-10   5.95e-10      0.196      0.844   -1.05e-09    1.28e-09
+tnx_ret    -7.687e-10    1.8e-08     -0.043      0.966   -3.61e-08    3.45e-08
+dgs10_ret   1.339e-09    1.7e-08      0.079      0.937   -3.19e-08    3.46e-08
+==============================================================================
+Amihud SLV:
+==============================================================================
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+const       4.643e-10   2.62e-11     17.705      0.000    4.13e-10    5.16e-10
+post_event -1.917e-11   7.92e-11     -0.242      0.809   -1.74e-10    1.36e-10
+dxy_ret      2.54e-09   7.19e-09      0.353      0.724   -1.15e-08    1.66e-08
+vix_ret    -2.658e-11   2.62e-10     -0.102      0.919    -5.4e-10    4.86e-10
+tnx_ret      1.82e-08   7.59e-09      2.399      0.016    3.33e-09    3.31e-08
+dgs10_ret  -1.345e-08      8e-09     -1.681      0.093   -2.91e-08    2.23e-09
+==============================================================================
+Log volume GLD:
+==============================================================================
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+const         16.4061      0.089    185.158      0.000      16.232      16.580
+post_event     0.3168      0.194      1.630      0.103      -0.064       0.698
+dxy_ret       11.5705     13.162      0.879      0.379     -14.226      37.367
+vix_ret        0.2885      0.488      0.591      0.555      -0.669       1.246
+tnx_ret        9.9547     12.454      0.799      0.424     -14.454      34.364
+dgs10_ret    -13.7500     11.573     -1.188      0.235     -36.433       8.933
+==============================================================================
+Log volume SLV:
+==============================================================================
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+const         17.4529      0.113    153.861      0.000      17.231      17.675
+post_event     1.1273      0.161      7.004      0.000       0.812       1.443
+dxy_ret        5.1501     11.921      0.432      0.666     -18.214      28.515
+vix_ret        0.5086      0.521      0.975      0.329      -0.513       1.531
+tnx_ret       26.8226     12.569      2.134      0.033       2.189      51.457
+dgs10_ret    -24.9975     13.407     -1.865      0.062     -51.274       1.279
 ==============================================================================</code></pre>
 </div>
 </div>
@@ -935,8 +1441,8 @@ tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
 <section id="key-results-summary" class="level3">
 <h3 class="anchored" data-anchor-id="key-results-summary">6.1 Key results summary</h3>
 <p>The table below summarizes pre- vs post-event means, t-test p-values, and the regression coefficient on <code>post_event</code> (with DXY, VIX and 10Y yield changes as controls) for the main outcome variables.</p>
-<div id="af7332d3" class="cell" data-execution_count="21">
-<div class="cell-output cell-output-display" data-execution_count="21">
+<div id="793aae0f" class="cell" data-execution_count="28">
+<div class="cell-output cell-output-display" data-execution_count="28">
 <div>
 
 
@@ -956,74 +1462,164 @@ tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
 <td>GLD 20d vol</td>
-<td>0.013439</td>
-<td>2.084300e-02</td>
-<td>0.0004</td>
-<td>0.007529</td>
+<td>0.0134</td>
+<td>0.0238</td>
 <td>0.0</td>
+<td>0.009922</td>
+<td>0.014</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
 <td>SLV 20d vol</td>
-<td>0.024114</td>
-<td>5.884500e-02</td>
+<td>0.0241</td>
+<td>0.0665</td>
 <td>0.0</td>
-<td>0.035004</td>
+<td>0.041045</td>
 <td>0.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
 <td>GLD Parkinson vol</td>
-<td>0.008671</td>
-<td>1.181800e-02</td>
-<td>0.011</td>
-<td>—</td>
-<td>—</td>
+<td>0.0087</td>
+<td>0.0136</td>
+<td>0.0002</td>
+<td>0.004595</td>
+<td>0.0568</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">3</td>
 <td>SLV Parkinson vol</td>
-<td>0.016253</td>
-<td>3.233200e-02</td>
+<td>0.0163</td>
+<td>0.0367</td>
 <td>0.0</td>
-<td>—</td>
-<td>—</td>
+<td>0.01953</td>
+<td>0.0009</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">4</td>
-<td>GLD volume</td>
-<td>15123724.705882</td>
-<td>2.534337e+07</td>
-<td>0.0113</td>
-<td>—</td>
-<td>—</td>
+<td>GLD GK vol</td>
+<td>0.0088</td>
+<td>0.0143</td>
+<td>0.0001</td>
+<td>0.005128</td>
+<td>0.0484</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">5</td>
-<td>SLV volume</td>
-<td>43889215.294118</td>
-<td>1.591018e+08</td>
+<td>SLV GK vol</td>
+<td>0.0168</td>
+<td>0.0381</td>
 <td>0.0</td>
-<td>—</td>
-<td>—</td>
+<td>0.02057</td>
+<td>0.0011</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">6</td>
-<td>Corr GLD–XAU</td>
-<td>—</td>
-<td>9.213690e-01</td>
-<td>—</td>
-<td>—</td>
-<td>—</td>
+<td>GLD 10d vol</td>
+<td>0.0124</td>
+<td>0.0266</td>
+<td>0.0</td>
+<td>0.014122</td>
+<td>0.0132</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">7</td>
+<td>SLV 10d vol</td>
+<td>0.0237</td>
+<td>0.0748</td>
+<td>0.0</td>
+<td>0.049741</td>
+<td>0.0002</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>GLD volume</td>
+<td>15.12M</td>
+<td>22.89M</td>
+<td>0.0222</td>
+<td>5993710.684069</td>
+<td>0.1337</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>SLV volume</td>
+<td>43.89M</td>
+<td>143.94M</td>
+<td>0.0</td>
+<td>80331348.966128</td>
+<td>0.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>Amihud GLD</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0026</td>
+<td>0.0</td>
+<td>0.022</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>Amihud SLV</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.2912</td>
+<td>-0.0</td>
+<td>0.8088</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>Corr GLD–XAU</td>
+<td>N/A (no Binance pre)</td>
+<td>0.9173</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
 <td>Corr SLV–XAG</td>
-<td>—</td>
-<td>9.354340e-01</td>
-<td>—</td>
-<td>—</td>
-<td>—</td>
+<td>N/A (no Binance pre)</td>
+<td>0.9342</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">14</td>
+<td>Beta 60d GLD/XAU</td>
+<td>N/A (no Binance pre)</td>
+<td>N/A (need longer window)</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>Beta 60d SLV/XAG</td>
+<td>N/A (no Binance pre)</td>
+<td>N/A (need longer window)</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>Beta 20d GLD/XAU</td>
+<td>N/A (no Binance pre)</td>
+<td>0.8634</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">17</td>
+<td>Beta 20d SLV/XAG</td>
+<td>N/A (no Binance pre)</td>
+<td>0.8298</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
 </tr>
 </tbody>
 </table>
@@ -1031,35 +1627,35 @@ tnx_ret       -0.0396      0.414     -0.095      0.924      -0.861       0.782
 </div>
 </div>
 </div>
-<p><strong>Comment.</strong> This table brings everything together. Use “Pre mean” vs “Post mean” to see the direction of change; “t-test p” to see if the change is significant; and “post_event coef” with “regression p” (for GLD and SLV volatility) to see the effect of the event after controlling for macro factors. For volatility, a positive and significant post_event coef supports H1; for correlation, higher post mean and low t-test p support H3; for volume, higher post mean supports H2.</p>
+<p><strong>Comment.</strong> This table brings everything together. Use “Pre mean” vs “Post mean” to see the direction of change; “t-test p” to see if the change is significant; and “post_event coef” with “regression p” (for GLD and SLV volatility) to see the effect of the event after controlling for macro factors. For volatility, a positive and significant post_event coef supports H1; for volume, higher post mean supports H2. Correlation columns (Corr GLD–XAU, Corr SLV–XAG) have no meaningful pre mean (Binance did not exist), so we use them only as descriptive post-event integration.</p>
 </section>
 <section id="empirical-results" class="level3">
 <h3 class="anchored" data-anchor-id="empirical-results">6.2 Empirical results</h3>
-<div id="7fed0d81" class="cell" data-execution_count="22">
+<div id="67d63a27" class="cell" data-execution_count="29">
 <div class="cell-output cell-output-stdout">
-<pre><code>**Volatility (H1):** After controlling for DXY, VIX and 10Y yield changes, the post-event coefficient in the GLD 20-day volatility regression is 0.00753 (p = 0.000), so volatility increased post launch and the effect is significant at the 5% level.
+<pre><code>**Volatility (H1):** After controlling for DXY, VIX and 10Y yield changes, the post-event coefficient in the GLD 20-day volatility regression is 0.00992 (p = 0.014), so volatility increased post launch and the effect is significant at the 5% level.
 
-For SLV, the post_event coefficient is 0.03500 (p = 0.000): volatility increased and is significant.
+For SLV, the post_event coefficient is 0.04105 (p = 0.000): volatility increased and is significant.
 
-**Integration (H3):** Average rolling correlation GLD–XAU is 0.921 post-event (pre: nan); SLV–XAG is 0.935 post-event (pre: nan). Higher post-event correlations would support increased price co-movement between ETFs and Binance perpetuals.
+**Integration (descriptive only):** Average rolling correlation GLD–XAU is 0.917 post-event; SLV–XAG is 0.934 post-event. There is no pre-event correlation (Binance did not exist), so we do not test a pre/post change; we only describe the level of co-movement after the launch.
 
-**Liquidity (H2):** Average GLD volume is 25343369 post-event vs 15123725 pre-event; SLV volume can be read from the pre/post table. Higher volume and lower Amihud post-event would indicate improved liquidity.
+**Liquidity (H2):** Average GLD volume is 22894241 post-event vs 15123725 pre-event; SLV volume can be read from the pre/post table. Higher volume and lower Amihud post-event would indicate improved liquidity.
 </code></pre>
 </div>
 </div>
 </section>
 <section id="conclusions-on-hypotheses" class="level3">
 <h3 class="anchored" data-anchor-id="conclusions-on-hypotheses">6.3 Conclusions on hypotheses</h3>
-<p>Using the key-results table and regressions above, we state whether each hypothesis is supported or not.</p>
-<div id="cff68857" class="cell" data-execution_count="23">
+<p>Using the key-results table and regressions above, we state whether each <em>testable</em> hypothesis (H1, H2) is supported or not. Integration is not tested as a hypothesis (no pre-period); we only describe post-event correlation.</p>
+<div id="2f02055f" class="cell" data-execution_count="30">
 <div class="cell-output cell-output-stdout">
 <pre><code>H1 (volatility increase after launch):
   GLD: supported (positive and significant post_event means higher volatility).
   SLV: supported.
 
-H3 (stronger co-movement, higher rolling correlation post-event):
-  GLD–XAU: not supported.
-  SLV–XAG: not supported.
+Integration (descriptive, post-event only; no pre/post test):
+  Rolling correlation GLD–XAU and SLV–XAG are reported in section 3.2 and the key-results table.
+  We do not test a formal integration hypothesis because Binance data do not exist before the launch.
 
 H2 (improved liquidity: higher volume, lower Amihud):
   GLD volume: higher post (higher post supports H2).
@@ -1071,14 +1667,15 @@ H2 (improved liquidity: higher volume, lower Amihud):
 <section id="limitations-and-extensions" class="level3">
 <h3 class="anchored" data-anchor-id="limitations-and-extensions">6.4 Limitations and extensions</h3>
 <ul>
+<li><strong>No pre-period for integration.</strong> Binance XAUUSDT/XAGUSDT did not exist before the launch, so we have no Binance returns before the event. Rolling correlation (GLD–XAU, SLV–XAG) and beta can only be computed from the launch date onward. We cannot compare “integration before vs after” in the same way as for volatility or liquidity; we can only describe the level and evolution of integration post-launch.</li>
 <li><strong>Short post-event window.</strong> We have limited days after the Binance launch. Results can change when more data are available.</li>
 <li><strong>Robustness.</strong> Try different event dates, volatility windows (e.g.&nbsp;10d or 60d), or placebo tests (fake event date) to see if the effects hold.</li>
-<li><strong>Beta.</strong> The key-results table focuses on volatility, volume and correlation. You can add pre/post means for <code>beta_60_gld_on_xau</code> and <code>beta_60_slv_on_xag</code> in the same way if you want to discuss integration in terms of beta.</li>
+<li><strong>Beta.</strong> The key-results table focuses on volatility, volume and correlation. You can add pre/post means for <code>beta_60_gld_on_xau</code> and <code>beta_60_slv_on_xag</code> in the same way if you want to discuss integration in terms of beta (again, “pre” will have no data for those series).</li>
 </ul>
 </section>
 <section id="conclusion" class="level3">
 <h3 class="anchored" data-anchor-id="conclusion">6.5 Conclusion</h3>
-<p>We asked whether the launch of Binance gold and silver perpetuals (XAUUSDT, XAGUSDT) changed volatility, liquidity and price co-movement in gold and silver ETFs (GLD, SLV). The regressions show a positive and significant coefficient on the post-event dummy for both GLD and SLV volatility when we control for DXY, VIX and 10Y yield changes: that supports <strong>H1</strong> (volatility increased after the launch). For <strong>H3</strong> (integration), we look at whether rolling correlations GLD–XAU and SLV–XAG are higher and statistically different post-event; the conclusions in section 6.3 state whether that is the case. For <strong>H2</strong> (liquidity), we compare pre- and post-event volume and Amihud from the summary table. In short: the evidence from this sample points to higher ETF volatility after the Binance TRADFI launch, with integration and liquidity conclusions as in the hypothesis checks above. Because the post-event window is still short, updating the analysis with more data is recommended.</p>
+<p>We asked whether the launch of Binance gold and silver perpetuals (XAUUSDT, XAGUSDT) changed volatility and liquidity in gold and silver ETFs (GLD, SLV). The regressions show a positive and significant coefficient on the post-event dummy for both GLD and SLV volatility when we control for DXY, VIX and 10Y yield changes: that supports <strong>H1</strong> (volatility increased after the launch). For <strong>H2</strong> (liquidity), we compare pre- and post-event volume and Amihud from the summary table. We do not test a formal hypothesis on integration (no pre-event Binance data); we only report post-event rolling correlation as descriptive evidence. In short: the evidence points to higher ETF volatility after the Binance TRADFI launch; liquidity and integration are discussed in the tables and section 6.3. Because the post-event window is still short, updating the analysis with more data is recommended.</p>
 </section>
 </section>
 

@@ -219,6 +219,51 @@ def download_yfinance_block() -> None:
         print(f"  Controls: shape {ctrl.shape}")
 
 
+def download_yahoo_intraday_1m() -> None:
+    """
+    Download Yahoo 1-minute data for GLD and SLV (last 7 days only — Yahoo limit).
+    Gives a short window where we have both Binance 1m and ETF 1m for same-frequency
+    intraday analysis (e.g. minute-level correlation in the most recent week).
+    """
+    out_path = os.path.join(DATA_DIR, "etf_gld_slv_1m_last7d.csv")
+    if os.path.exists(out_path):
+        print("=== Yahoo ETF 1m (last 7d) ===")
+        print(f"  {out_path} already exists, skipping.")
+        return
+
+    print("=== Yahoo ETF 1m (last 7 days) ===")
+    # yfinance: 1m limited to 7 days per request and roughly last 30 days total
+    try:
+        df = yf.download(
+            ["GLD", "SLV"],
+            period="7d",
+            interval="1m",
+            progress=False,
+            auto_adjust=False,
+            group_by="ticker",
+            threads=False,
+        )
+    except Exception as e:
+        print(f"  Failed to download 1m data: {e}")
+        return
+
+    if df.empty or len(df) < 10:
+        print("  No or too few 1m bars returned (Yahoo may limit intraday by region).")
+        return
+
+    # Flatten multi-level columns to gld_close, slv_close, etc.
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = [f"{ticker}_{col}".lower() for ticker, col in df.columns]
+    df.index = pd.to_datetime(df.index)
+    if df.index.tz is None:
+        df.index = df.index.tz_localize("America/New_York", ambiguous="infer")
+    df.index = df.index.tz_convert("UTC")
+    df.index.name = "datetime"
+    df = df.sort_index()
+    df.to_csv(out_path)
+    print(f"  Saved {len(df)} rows to {out_path}")
+
+
 # ---------------------------------------------------------------------
 # 3. FRED (DGS10) — use REST API via requests to avoid SSL issues with urllib on macOS
 # ---------------------------------------------------------------------
@@ -277,11 +322,36 @@ def download_fred_block() -> None:
 # main
 # ---------------------------------------------------------------------
 
+def _refresh_raw_files() -> None:
+    """Remove raw CSV outputs so the next run re-downloads everything."""
+    to_remove = [
+        "binance_gold_silver_1m_all.csv",
+        "binance_xauusdt_1m.csv", "binance_xagusdt_1m.csv",
+        "binance_xauusdt_funding.csv", "binance_xagusdt_funding.csv",
+        "binance_xauusdt_open_interest.csv", "binance_xagusdt_open_interest.csv",
+        "etf_gld_iau_slv_gdx_sil_daily.csv", "controls_dxy_vix_tnx_daily.csv",
+        "etf_gld_slv_1m_last7d.csv", "fred_dgs10_daily.csv",
+    ]
+    for name in to_remove:
+        path = os.path.join(DATA_DIR, name)
+        if os.path.exists(path):
+            os.remove(path)
+            print(f"  Removed {name}")
+
+
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="Download raw data for the project.")
+    parser.add_argument("--refresh", action="store_true", help="Remove existing raw files and re-download.")
+    args = parser.parse_args()
+    if args.refresh:
+        print("=== Refresh: removing existing raw files ===")
+        _refresh_raw_files()
     print(f"Project root: {PROJECT_ROOT}")
     print(f"Data directory: {DATA_DIR}")
     download_binance_block()
     download_yfinance_block()
+    download_yahoo_intraday_1m()
     download_fred_block()
     print("=== Done. Raw data saved to data/raw/ ===")
 

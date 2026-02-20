@@ -25,15 +25,17 @@ Did the introduction of Binance TRADFI gold and silver perpetual futures change 
 
 We do *not* formulate a formal hypothesis on “integration increased”, because Binance returns do not exist before the launch, so we cannot compute pre-event GLD–XAU or SLV–XAG correlation or beta. We still report post-event rolling correlation and integration metrics as **descriptive** evidence (how strongly ETF and perpetual co-move after the launch), but we do not test a pre/post change for integration.
 
+**How we identify the impact on the market.** We use an **event study** with (i) pre/post comparison of means and t-tests, and (ii) **OLS regressions** where the outcome is volatility (or liquidity proxy) and the key regressor is a **post-event dummy** (`post_event` = 1 after the launch date), plus controls (DXY, VIX, 10Y yield changes). The coefficient on `post_event` is our estimate of the change in the outcome after the launch, conditional on controls. We do not have a control group (e.g. other assets without a new derivative), so we do not use difference-in-differences; the design is a single-market before/after event study with controls. See `Literature/LITERATURE_METHODS.md` for a comparison with the Bitcoin futures paper (Augustin et al., Management Science 2023), which uses DiD.
+
 ## 2. Data and feature set
 
 We use three pre‑built datasets produced by `build_features.py`:
 
-- **Daily panel** (`features_daily.csv`): 112 trading days, 85 variables. Used for the event study (pre/post comparison, regressions).
+- **Daily panel** (`features_daily.csv`): 118 trading days, 87 variables. Used for the event study (pre/post comparison, regressions).
 - **Hourly panel** (`features_hourly.csv`): one row per hour over the same calendar span; Binance 1m aggregated to hourly, ETF/controls forward-filled from daily.
 - **1-minute panel** (`features_1m.csv`): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used to satisfy the course requirement of **≥10,000 observations**.
 
-Raw data sources and variable definitions are in `DATA_DESCRIPTION.md`, `VARIABLES_DESCRIPTION.md`, and `DATA_ROW_COUNTS_AND_PERIODS.md`.
+Raw data sources and variable definitions are in `DATA_DESCRIPTION.md`, `VARIABLES_DESCRIPTION.md`, and `DATA_ROW_COUNTS_AND_PERIODS.md`. A mapping of which variables are used where (and how to extend usage) is in `VARIABLE_USAGE.md`.
 
 ```{python}
 import pandas as pd
@@ -151,6 +153,63 @@ plt.tight_layout()
 plt.show()
 ```
 
+**Post-event integration in one picture:** scatter of ETF daily returns vs Binance perpetual returns (post-event only). Points along the diagonal mean the two move together; the regression line and correlation summarize the link.
+
+```{python}
+post_mask = df_core["post_event"] == 1
+fig, axes = plt.subplots(1, 2, figsize=(11, 5))
+# GLD vs XAU
+g = df_core.loc[post_mask, ["ret_gld", "ret_xau_binance"]].dropna()
+if len(g) > 5:
+    axes[0].scatter(g["ret_xau_binance"], g["ret_gld"], alpha=0.6, s=25, color=COLORS["gld"], edgecolors="white", linewidths=0.3)
+    z = np.polyfit(g["ret_xau_binance"], g["ret_gld"], 1)
+    xl = np.array([g["ret_xau_binance"].min(), g["ret_xau_binance"].max()])
+    axes[0].plot(xl, np.poly1d(z)(xl), color=COLORS["event"], linestyle="--", linewidth=2, label=f"Fit (ρ = {g.corr().iloc[0,1]:.3f})")
+    axes[0].legend()
+    axes[0].set_xlabel("XAUUSDT daily return")
+    axes[0].set_ylabel("GLD daily return")
+    axes[0].set_title("GLD vs XAUUSDT (post-event)")
+    axes[0].axhline(0, color="gray", linestyle=":", alpha=0.7)
+    axes[0].axvline(0, color="gray", linestyle=":", alpha=0.7)
+# SLV vs XAG
+s = df_core.loc[post_mask, ["ret_slv", "ret_xag_binance"]].dropna()
+if len(s) > 5:
+    axes[1].scatter(s["ret_xag_binance"], s["ret_slv"], alpha=0.6, s=25, color=COLORS["slv"], edgecolors="white", linewidths=0.3)
+    z2 = np.polyfit(s["ret_xag_binance"], s["ret_slv"], 1)
+    xl2 = np.array([s["ret_xag_binance"].min(), s["ret_xag_binance"].max()])
+    axes[1].plot(xl2, np.poly1d(z2)(xl2), color=COLORS["event"], linestyle="--", linewidth=2, label=f"Fit (ρ = {s.corr().iloc[0,1]:.3f})")
+    axes[1].legend()
+    axes[1].set_xlabel("XAGUSDT daily return")
+    axes[1].set_ylabel("SLV daily return")
+    axes[1].set_title("SLV vs XAGUSDT (post-event)")
+    axes[1].axhline(0, color="gray", linestyle=":", alpha=0.7)
+    axes[1].axvline(0, color="gray", linestyle=":", alpha=0.7)
+plt.suptitle("Daily returns: ETF vs Binance perpetual (post-event)", fontsize=12, y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+**How the distribution of returns changed:** pre- vs post-event density of daily returns. A wider (more dispersed) distribution after the event is consistent with higher volatility.
+
+```{python}
+fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+for ax, ret_col, label, c in zip(axes, ["ret_gld", "ret_slv"], ["GLD", "SLV"], [COLORS["gld"], COLORS["slv"]]):
+    pre_ret = df_core.loc[df_core["post_event"] == 0, ret_col].dropna()
+    post_ret = df_core.loc[df_core["post_event"] == 1, ret_col].dropna()
+    if len(pre_ret) > 2 and len(post_ret) > 2:
+        pre_ret.plot(kind="kde", ax=ax, label="Pre-event", color=COLORS["pre"], linewidth=2)
+        post_ret.plot(kind="kde", ax=ax, label="Post-event", color=COLORS["post"], linewidth=2)
+        ax.set_xlabel("Daily return")
+        ax.set_title(f"{label} daily returns")
+        ax.legend()
+        lo = min(pre_ret.min(), post_ret.min()) - 0.01
+        hi = max(pre_ret.max(), post_ret.max()) + 0.01
+        ax.set_xlim(lo, hi)
+plt.suptitle("Return distribution: pre vs post event", fontsize=12, y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
 ```{python}
 returns_cols = ["ret_gld", "ret_slv", "ret_xau_binance", "ret_xag_binance"]
 df_core[returns_cols].describe().T[["mean", "std", "min", "max"]]
@@ -231,6 +290,63 @@ else:
     ax.legend(loc="lower right")
     plt.tight_layout()
     plt.show()
+```
+
+#### Minute-level correlation (last 7 days)
+
+For the most recent 7 days we have *minute-level* data for both ETFs (Yahoo) and Binance. We merge on datetime and compute 1m returns to get a same-frequency measure of short-run co-movement.
+
+```{python}
+# Optional: minute-level GLD/SLV from Yahoo (last 7d) + Binance 1m overlap
+raw_dir = "data/raw"
+yahoo_1m_path = os.path.join(raw_dir, "etf_gld_slv_1m_last7d.csv")
+binance_xau_path = os.path.join(raw_dir, "binance_xauusdt_1m.csv")
+binance_xag_path = os.path.join(raw_dir, "binance_xagusdt_1m.csv")
+
+minute_corr_gld_xau = minute_corr_slv_xag = None
+if os.path.exists(yahoo_1m_path) and os.path.exists(binance_xau_path) and os.path.exists(binance_xag_path):
+    y1m = pd.read_csv(yahoo_1m_path, parse_dates=["datetime"])
+    y1m = y1m.set_index("datetime").sort_index()
+    if y1m.index.tz is None:
+        y1m.index = y1m.index.tz_localize("UTC", ambiguous="infer")
+    xau = pd.read_csv(binance_xau_path, parse_dates=["open_time"])
+    xau = xau.set_index("open_time").sort_index()
+    if xau.index.tz is None:
+        xau.index = xau.index.tz_localize("UTC", ambiguous="infer")
+    xag = pd.read_csv(binance_xag_path, parse_dates=["open_time"])
+    xag = xag.set_index("open_time").sort_index()
+    if xag.index.tz is None:
+        xag.index = xag.index.tz_localize("UTC", ambiguous="infer")
+
+    close_gld = y1m["gld_close"].dropna()
+    close_slv = y1m["slv_close"].dropna()
+    close_xau = xau["close"].rename("xau_close")
+    close_xag = xag["close"].rename("xag_close")
+
+    # Align to common index (inner join on datetime)
+    j = close_gld.to_frame().join(close_xau, how="inner")
+    j = j.dropna()
+    if len(j) > 30:
+        ret_gld_1m = np.log(j["gld_close"] / j["gld_close"].shift(1)).dropna()
+        ret_xau_1m = np.log(j["xau_close"] / j["xau_close"].shift(1)).dropna()
+        common = ret_gld_1m.index.intersection(ret_xau_1m.index)
+        minute_corr_gld_xau = ret_gld_1m.loc[common].corr(ret_xau_1m.loc[common])
+
+    j2 = close_slv.to_frame().join(close_xag, how="inner").dropna()
+    if len(j2) > 30:
+        ret_slv_1m = np.log(j2["slv_close"] / j2["slv_close"].shift(1)).dropna()
+        ret_xag_1m = np.log(j2["xag_close"] / j2["xag_close"].shift(1)).dropna()
+        common2 = ret_slv_1m.index.intersection(ret_xag_1m.index)
+        minute_corr_slv_xag = ret_slv_1m.loc[common2].corr(ret_xag_1m.loc[common2])
+
+if minute_corr_gld_xau is not None or minute_corr_slv_xag is not None:
+    print("Minute-level return correlation (last 7 days, overlapping 1m bars):")
+    if minute_corr_gld_xau is not None:
+        print(f"  GLD–XAU: {minute_corr_gld_xau:.4f}")
+    if minute_corr_slv_xag is not None:
+        print(f"  SLV–XAG: {minute_corr_slv_xag:.4f}")
+else:
+    print("Minute-level overlap not available (run download_data.py to fetch etf_gld_slv_1m_last7d.csv).")
 ```
 
 ```{python}
@@ -323,6 +439,96 @@ if "post_event" in C.columns:
 
 We compare average volatility, volume and integration measures before and after the futures launch. The event date is 2026-01-05 (Binance XAUUSDT TRADFI launch).
 
+**Pre vs post: main numbers at a glance.** Bar chart of average volatility and volume before and after the event. The jump in the bars after the event is the “effect” we test in regressions.
+
+```{python}
+pre = df_core["post_event"] == 0
+post = df_core["post_event"] == 1
+metrics_bar = [
+    ("vol_realized_20_ret_gld", "GLD 20d vol"),
+    ("vol_realized_20_ret_slv", "SLV 20d vol"),
+    ("vol_gld", "GLD volume"),
+    ("vol_slv", "SLV volume"),
+]
+# Volatility and volume on different scales — plot in two panels so 20d vol bars are visible
+vol_bar = [(c, l) for c, l in metrics_bar if "vol_realized" in c]
+vol_data = []
+for col, label in vol_bar:
+    if col not in df_core.columns:
+        continue
+    pre_mean = df_core.loc[pre, col].mean()
+    post_mean = df_core.loc[post, col].mean()
+    if not np.isnan(pre_mean) and not np.isnan(post_mean):
+        vol_data.append({"Metric": label, "Pre-event": pre_mean, "Post-event": post_mean})
+vol_df = pd.DataFrame(vol_data).set_index("Metric") if vol_data else None
+
+vol_vol_data = []
+for col, label in [("vol_gld", "GLD volume (M)"), ("vol_slv", "SLV volume (M)")]:
+    if col not in df_core.columns:
+        continue
+    pre_mean = df_core.loc[pre, col].mean() / 1e6
+    post_mean = df_core.loc[post, col].mean() / 1e6
+    if not np.isnan(pre_mean) and not np.isnan(post_mean):
+        vol_vol_data.append({"Metric": label, "Pre-event": pre_mean, "Post-event": post_mean})
+vol_vol_df = pd.DataFrame(vol_vol_data).set_index("Metric") if vol_vol_data else None
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 5))
+if vol_df is not None and len(vol_df) > 0:
+    vol_df.plot(kind="bar", ax=axes[0], color=[COLORS["pre"], COLORS["post"]], edgecolor="white", linewidth=0.8)
+    axes[0].set_ylabel("Mean 20-day volatility")
+    axes[0].set_title("Pre vs post: volatility")
+    axes[0].legend(title="")
+    axes[0].tick_params(axis="x", rotation=20)
+if vol_vol_df is not None and len(vol_vol_df) > 0:
+    vol_vol_df.plot(kind="bar", ax=axes[1], color=[COLORS["pre"], COLORS["post"]], edgecolor="white", linewidth=0.8)
+    axes[1].set_ylabel("Mean volume (millions)")
+    axes[1].set_title("Pre vs post: volume")
+    axes[1].legend(title="")
+    axes[1].tick_params(axis="x", rotation=20)
+plt.suptitle("Pre- vs post-event: average volatility and volume", fontsize=12, y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+**Dynamics around the event:** average outcome by week relative to the launch (week 0 = event week). This shows whether the change is immediate or builds over time.
+
+```{python}
+df_et = df_core.copy()
+df_et["days_since_event"] = (df_et.index - event_date).days
+df_et["week_rel"] = (df_et["days_since_event"] // 7).astype(int)
+# Restrict to a window e.g. -6 to +8 weeks
+df_et = df_et[(df_et["week_rel"] >= -6) & (df_et["week_rel"] <= 8)]
+
+fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+for ax in axes:
+    ax.axvline(0, color=COLORS["event"], linestyle="--", linewidth=1.5, label="Event week")
+
+# Mean 20d volatility by week (GLD and SLV)
+v_gld = df_et.groupby("week_rel")["vol_realized_20_ret_gld"].mean()
+v_slv = df_et.groupby("week_rel")["vol_realized_20_ret_slv"].mean()
+axes[0].plot(v_gld.index, v_gld.values, "o-", color=COLORS["gld"], linewidth=2, markersize=8, label="GLD 20d vol")
+axes[0].plot(v_slv.index, v_slv.values, "s-", color=COLORS["slv"], linewidth=2, markersize=8, label="SLV 20d vol")
+axes[0].set_ylabel("Mean volatility")
+axes[0].set_title("Average 20-day volatility by week relative to launch")
+axes[0].legend(loc="upper right")
+axes[0].set_xlabel("Week relative to event (0 = launch)")
+
+# Mean volume by week (in millions)
+if "vol_gld" in df_et.columns and "vol_slv" in df_et.columns:
+    vg = df_et.groupby("week_rel")["vol_gld"].mean() / 1e6
+    vs = df_et.groupby("week_rel")["vol_slv"].mean() / 1e6
+    axes[1].plot(vg.index, vg.values, "o-", color=COLORS["gld"], linewidth=2, markersize=8, label="GLD volume")
+    axes[1].plot(vs.index, vs.values, "s-", color=COLORS["slv"], linewidth=2, markersize=8, label="SLV volume")
+    axes[1].set_ylabel("Mean volume (millions)")
+    axes[1].set_title("Average trading volume by week relative to launch")
+else:
+    axes[1].set_visible(False)
+axes[1].legend(loc="upper right")
+axes[1].set_xlabel("Week relative to event (0 = launch)")
+plt.tight_layout()
+plt.show()
+```
+
 **Pre vs post distributions** for key metrics (boxplots by period):
 
 ```{python}
@@ -377,6 +583,26 @@ if "corr_20_gld_xau" in df_core.columns:
     rows.append(summarize_pre_post(df_core["corr_20_gld_xau"], "corr_20_gld_xau"))
 if "corr_20_slv_xag" in df_core.columns:
     rows.append(summarize_pre_post(df_core["corr_20_slv_xag"], "corr_20_slv_xag"))
+if "amihud_gld" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["amihud_gld"], "Amihud GLD"))
+if "amihud_slv" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["amihud_slv"], "Amihud SLV"))
+if "vol_gk_gld" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["vol_gk_gld"], "GLD GK vol"))
+if "vol_gk_slv" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["vol_gk_slv"], "SLV GK vol"))
+if "vol_realized_10_ret_gld" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["vol_realized_10_ret_gld"], "GLD 10d vol"))
+if "vol_realized_10_ret_slv" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["vol_realized_10_ret_slv"], "SLV 10d vol"))
+if "beta_60_gld_on_xau" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["beta_60_gld_on_xau"], "beta_60_gld_on_xau"))
+if "beta_60_slv_on_xag" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["beta_60_slv_on_xag"], "beta_60_slv_on_xag"))
+if "beta_20_gld_on_xau" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["beta_20_gld_on_xau"], "Beta 20d GLD/XAU"))
+if "beta_20_slv_on_xag" in df_core.columns:
+    rows.append(summarize_pre_post(df_core["beta_20_slv_on_xag"], "Beta 20d SLV/XAG"))
 
 summary_pre_post = pd.concat(rows, ignore_index=True)
 summary_pre_post
@@ -402,10 +628,20 @@ metrics = {
     "vol_realized_20_ret_slv": "SLV 20d vol",
     "vol_parkinson_gld": "GLD Parkinson vol",
     "vol_parkinson_slv": "SLV Parkinson vol",
+    "vol_gk_gld": "GLD GK vol",
+    "vol_gk_slv": "SLV GK vol",
+    "vol_realized_10_ret_gld": "GLD 10d vol",
+    "vol_realized_10_ret_slv": "SLV 10d vol",
     "vol_gld": "GLD volume",
     "vol_slv": "SLV volume",
+    "amihud_gld": "Amihud GLD",
+    "amihud_slv": "Amihud SLV",
     "corr_20_gld_xau": "corr_20_gld_xau",
     "corr_20_slv_xag": "corr_20_slv_xag",
+    "beta_60_gld_on_xau": "beta_60_gld_on_xau",
+    "beta_60_slv_on_xag": "beta_60_slv_on_xag",
+    "beta_20_gld_on_xau": "Beta 20d GLD/XAU",
+    "beta_20_slv_on_xag": "Beta 20d SLV/XAG",
 }
 
 tt_rows = []
@@ -420,16 +656,78 @@ tt_results = pd.DataFrame(tt_rows)
 tt_results
 ```
 
-**Comment.** A low p-value (e.g. below 0.05) means the difference between pre and post is statistically significant. Use this together with the pre/post means to say whether the change is meaningful.
+**Comment.** A low p-value (e.g. below 0.05) means the difference between pre and post is statistically significant. We use **Welch's t-test** (unequal variances, `equal_var=False`) because pre and post variances often differ.
+
+#### Statistical validation: full t-test table and Levene test
+
+Below we report **Welch t-test** (difference in means) and **Levene test** (difference in variances) for all metrics that have both pre and post data. Significance levels: \* 10%, \*\* 5%, \*\*\* 1%.
+
+```{python}
+def levene_pre_post(series: pd.Series) -> float:
+    pre = series[df_core["post_event"] == 0].dropna()
+    post = series[df_core["post_event"] == 1].dropna()
+    if len(pre) < 3 or len(post) < 3:
+        return np.nan
+    stat, p = stats.levene(pre, post)
+    return p
+
+validation_rows = []
+for col, label in metrics.items():
+    if col not in df_core.columns:
+        continue
+    pre = df_core.loc[df_core["post_event"] == 0, col].dropna()
+    post = df_core.loc[df_core["post_event"] == 1, col].dropna()
+    if len(pre) < 3 or len(post) < 3:
+        continue
+    t_stat, t_p = stats.ttest_ind(post, pre, equal_var=False)
+    lev_p = levene_pre_post(df_core[col])
+    sig = ""
+    if t_p < 0.01: sig = "***"
+    elif t_p < 0.05: sig = "**"
+    elif t_p < 0.10: sig = "*"
+    validation_rows.append({
+        "Metric": label,
+        "Pre n": len(pre), "Post n": len(post),
+        "Pre mean": round(pre.mean(), 6), "Post mean": round(post.mean(), 6),
+        "t (Welch)": round(t_stat, 4), "t-test p": round(t_p, 4), "Sig.": sig,
+        "Levene p": round(lev_p, 4) if not np.isnan(lev_p) else "—",
+    })
+validation_df = pd.DataFrame(validation_rows)
+validation_df
+```
+
+**Comment.** Levene p < 0.05 indicates that variances differ between pre and post (e.g. higher volatility in post implies more spread), which supports using Welch's t-test instead of the standard equal-variance t-test.
 
 ## 5. Simple regression models
 
-We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns.
+We estimate simple linear models to quantify the impact of the event and controls on ETF volatility and absolute returns. Following the literature (e.g. Augustin et al.), we winsorize outcome variables at 5% and 95% to reduce the influence of outliers, and report HAC (Newey–West) standard errors to allow for autocorrelation in daily data.
 
 ```{python}
 import statsmodels.api as sm
 
 reg_df = df_core.copy()
+
+# Winsorize outcome variables at 5% and 95% (as in Augustin et al.)
+def winsorize(series: pd.Series, lower: float = 0.05, upper: float = 0.95) -> pd.Series:
+    q = series.quantile([lower, upper])
+    return series.clip(lower=q.iloc[0], upper=q.iloc[1])
+
+outcome_cols_winsor = [
+    "vol_realized_20_ret_gld", "vol_realized_20_ret_slv",
+    "vol_parkinson_gld", "vol_parkinson_slv", "vol_gk_gld", "vol_gk_slv",
+    "vol_realized_10_ret_gld", "vol_realized_10_ret_slv",
+    "ret_gld_abs", "ret_slv_abs",
+    "amihud_gld", "amihud_slv", "log_vol_gld", "log_vol_slv",
+    "vol_gld", "vol_slv",
+]
+for col in outcome_cols_winsor:
+    if col in reg_df.columns:
+        reg_df[f"{col}_w"] = winsorize(reg_df[col].dropna())
+
+# Control variables: always dxy, vix, tnx; add dgs10_ret (FRED) if available
+control_cols = ["post_event", "dxy_ret", "vix_ret", "tnx_ret"]
+if "dgs10_ret" in reg_df.columns:
+    control_cols = ["post_event", "dxy_ret", "vix_ret", "tnx_ret", "dgs10_ret"]
 
 reg_cols = [
     "vol_realized_20_ret_gld",
@@ -445,30 +743,33 @@ reg_df_reg.head()
 ```
 
 ```{python}
-def run_ols(y_col: str, x_cols: list, data: pd.DataFrame):
+def run_ols(y_col: str, x_cols: list, data: pd.DataFrame, use_winsor: bool = True, hac: bool = True):
     """
-    Run a simple OLS regression if there are enough observations.
-    Returns a fitted model or None.
+    OLS with optional winsorized outcome and HAC (Newey-West) standard errors.
     """
-    sub = data[[y_col] + x_cols].dropna()
+    y_name = f"{y_col}_w" if (use_winsor and f"{y_col}_w" in data.columns) else y_col
+    if y_name not in data.columns:
+        y_name = y_col
+    sub = data[[y_name] + x_cols].dropna()
     if sub.shape[0] < 10:
-        print(f"Not enough non-missing observations for {y_col} (n={sub.shape[0]}). Skipping regression.")
+        print(f"Not enough non-missing observations for {y_name} (n={sub.shape[0]}). Skipping regression.")
         return None
-    y = sub[y_col]
+    y = sub[y_name]
     X = sm.add_constant(sub[x_cols])
     model = sm.OLS(y, X, missing="drop")
-    return model.fit()
+    fit = model.fit(cov_type="HAC", cov_kwds={"maxlags": 5}) if hac else model.fit()
+    return fit
 
-model_gld_vol = run_ols(
-    "vol_realized_20_ret_gld",
-    ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
-    reg_df,
-)
-model_slv_vol = run_ols(
-    "vol_realized_20_ret_slv",
-    ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
-    reg_df,
-)
+model_gld_vol = run_ols("vol_realized_20_ret_gld", control_cols, reg_df, use_winsor=True, hac=True)
+model_slv_vol = run_ols("vol_realized_20_ret_slv", control_cols, reg_df, use_winsor=True, hac=True)
+model_park_gld = run_ols("vol_parkinson_gld", control_cols, reg_df, use_winsor=True, hac=True) if "vol_parkinson_gld" in reg_df.columns else None
+model_park_slv = run_ols("vol_parkinson_slv", control_cols, reg_df, use_winsor=True, hac=True) if "vol_parkinson_slv" in reg_df.columns else None
+model_gk_gld = run_ols("vol_gk_gld", control_cols, reg_df, use_winsor=True, hac=True) if "vol_gk_gld" in reg_df.columns else None
+model_gk_slv = run_ols("vol_gk_slv", control_cols, reg_df, use_winsor=True, hac=True) if "vol_gk_slv" in reg_df.columns else None
+model_10d_gld = run_ols("vol_realized_10_ret_gld", control_cols, reg_df, use_winsor=True, hac=True) if "vol_realized_10_ret_gld" in reg_df.columns else None
+model_10d_slv = run_ols("vol_realized_10_ret_slv", control_cols, reg_df, use_winsor=True, hac=True) if "vol_realized_10_ret_slv" in reg_df.columns else None
+model_vol_gld = run_ols("vol_gld", control_cols, reg_df, use_winsor=True, hac=True) if "vol_gld" in reg_df.columns else None
+model_vol_slv = run_ols("vol_slv", control_cols, reg_df, use_winsor=True, hac=True) if "vol_slv" in reg_df.columns else None
 
 if model_gld_vol is not None:
     print(model_gld_vol.summary().tables[1])
@@ -483,22 +784,30 @@ If needed, we can also model absolute returns as a simple proxy for volatility:
 
 ```{python}
 if "ret_gld_abs" in reg_df.columns and "ret_slv_abs" in reg_df.columns:
-    model_gld_abs = run_ols(
-        "ret_gld_abs",
-        ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
-        reg_df,
-    )
-    model_slv_abs = run_ols(
-        "ret_slv_abs",
-        ["post_event", "dxy_ret", "vix_ret", "tnx_ret"],
-        reg_df,
-    )
-
+    model_gld_abs = run_ols("ret_gld_abs", control_cols, reg_df, use_winsor=True, hac=True)
+    model_slv_abs = run_ols("ret_slv_abs", control_cols, reg_df, use_winsor=True, hac=True)
     if model_gld_abs is not None:
         print(model_gld_abs.summary().tables[1])
         print()
     if model_slv_abs is not None:
         print(model_slv_abs.summary().tables[1])
+```
+
+**Liquidity (H2):** we also regress Amihud illiquidity and log(volume) on the event and controls. A negative coefficient on `post_event` for Amihud would indicate improved liquidity (lower illiquidity) after the launch; a positive coefficient for log_vol would indicate higher volume.
+
+```{python}
+model_amihud_gld = run_ols("amihud_gld", control_cols, reg_df, use_winsor=True, hac=True) if "amihud_gld" in reg_df.columns else None
+model_amihud_slv = run_ols("amihud_slv", control_cols, reg_df, use_winsor=True, hac=True) if "amihud_slv" in reg_df.columns else None
+model_logvol_gld = run_ols("log_vol_gld", control_cols, reg_df, use_winsor=True, hac=True) if "log_vol_gld" in reg_df.columns else None
+model_logvol_slv = run_ols("log_vol_slv", control_cols, reg_df, use_winsor=True, hac=True) if "log_vol_slv" in reg_df.columns else None
+if model_amihud_gld is not None:
+    print("Amihud GLD:"); print(model_amihud_gld.summary().tables[1])
+if model_amihud_slv is not None:
+    print("Amihud SLV:"); print(model_amihud_slv.summary().tables[1])
+if model_logvol_gld is not None:
+    print("Log volume GLD:"); print(model_logvol_gld.summary().tables[1])
+if model_logvol_slv is not None:
+    print("Log volume SLV:"); print(model_logvol_slv.summary().tables[1])
 ```
 
 ## 6. Interpretation and next steps
@@ -522,25 +831,49 @@ def get_ttest_pval(tt: pd.DataFrame, metric: str):
     return row["p_value"].iloc[0] if len(row) else np.nan
 
 # Metric column name, display label, regression model name (or None)
+# For each outcome we run OLS when model_* is set, so post_event coef appears in the table
 key_metrics = [
     ("vol_realized_20_ret_gld", "GLD 20d vol", "model_gld_vol"),
     ("vol_realized_20_ret_slv", "SLV 20d vol", "model_slv_vol"),
-    ("vol_parkinson_gld", "GLD Parkinson vol", None),
-    ("vol_parkinson_slv", "SLV Parkinson vol", None),
-    ("vol_gld", "GLD volume", None),
-    ("vol_slv", "SLV volume", None),
-    ("corr_20_gld_xau", "Corr GLD–XAU", None),
+    ("vol_parkinson_gld", "GLD Parkinson vol", "model_park_gld"),
+    ("vol_parkinson_slv", "SLV Parkinson vol", "model_park_slv"),
+    ("vol_gk_gld", "GLD GK vol", "model_gk_gld"),
+    ("vol_gk_slv", "SLV GK vol", "model_gk_slv"),
+    ("vol_realized_10_ret_gld", "GLD 10d vol", "model_10d_gld"),
+    ("vol_realized_10_ret_slv", "SLV 10d vol", "model_10d_slv"),
+    ("vol_gld", "GLD volume", "model_vol_gld"),
+    ("vol_slv", "SLV volume", "model_vol_slv"),
+    ("amihud_gld", "Amihud GLD", "model_amihud_gld"),
+    ("amihud_slv", "Amihud SLV", "model_amihud_slv"),
+    ("corr_20_gld_xau", "Corr GLD–XAU", None),   # no pre-period, descriptive only
     ("corr_20_slv_xag", "Corr SLV–XAG", None),
+    ("beta_60_gld_on_xau", "Beta 60d GLD/XAU", None),
+    ("beta_60_slv_on_xag", "Beta 60d SLV/XAG", None),
+    ("beta_20_gld_on_xau", "Beta 20d GLD/XAU", None),
+    ("beta_20_slv_on_xag", "Beta 20d SLV/XAG", None),
 ]
+
+# Metrics that have no pre-period (Binance did not exist) — show N/A instead of —
+no_pre_metrics = {"corr_20_gld_xau", "corr_20_slv_xag", "beta_60_gld_on_xau", "beta_60_slv_on_xag", "beta_20_gld_on_xau", "beta_20_slv_on_xag"}
+
+def fmt_val(x, col_name: str, is_volume: bool = False):
+    """Format value for table; use N/A for NaN where appropriate."""
+    if np.isnan(x):
+        return "N/A"
+    if is_volume and abs(x) >= 1e6:
+        return f"{x/1e6:.2f}M"
+    if is_volume and abs(x) >= 1e3:
+        return f"{x/1e3:.1f}k"
+    if isinstance(x, (int, np.integer)) and not is_volume:
+        return round(x, 4)
+    return round(x, 6) if abs(x) < 1e-4 or abs(x) >= 1e4 else round(x, 4)
 
 key_rows = []
 for col, label, model_name in key_metrics:
     if col not in df_core.columns:
         continue
-    # Pre/post means: summary_pre_post uses the label we passed (e.g. "GLD 20d vol" or "corr_20_gld_xau")
     sp_metric = label if (summary_pre_post["metric"] == label).any() else col
     pre_mean, post_mean = get_pre_post_means(summary_pre_post, sp_metric)
-    # t-test p-value: tt_results uses same labels as in metrics dict
     tt_metric = label if (tt_results["metric"] == label).any() else col
     pval = get_ttest_pval(tt_results, tt_metric)
 
@@ -551,13 +884,21 @@ for col, label, model_name in key_metrics:
             coef_post = mod.params["post_event"]
             pval_reg = mod.pvalues["post_event"]
 
+    no_pre = col in no_pre_metrics
+    is_vol = "volume" in label.lower() or "vol_gld" == col or "vol_slv" == col
+    pre_str = "N/A (no Binance pre)" if no_pre else (fmt_val(pre_mean, col, is_vol) if not np.isnan(pre_mean) else "N/A")
+    post_str = fmt_val(post_mean, col, is_vol) if not np.isnan(post_mean) else ("N/A (need longer window)" if no_pre else "N/A")
+    pval_str = "N/A" if no_pre else (round(pval, 4) if not np.isnan(pval) else "N/A")
+    coef_str = "N/A" if (no_pre and not model_name) else (round(coef_post, 6) if not np.isnan(coef_post) else "N/A")
+    regp_str = "N/A" if (no_pre and not model_name) else (round(pval_reg, 4) if not np.isnan(pval_reg) else "N/A")
+
     key_rows.append({
         "Metric": label,
-        "Pre mean": round(pre_mean, 6) if not np.isnan(pre_mean) else "—",
-        "Post mean": round(post_mean, 6) if not np.isnan(post_mean) else "—",
-        "t-test p": round(pval, 4) if not np.isnan(pval) else "—",
-        "post_event coef": round(coef_post, 6) if not np.isnan(coef_post) else "—",
-        "regression p": round(pval_reg, 4) if not np.isnan(pval_reg) else "—",
+        "Pre mean": pre_str,
+        "Post mean": post_str,
+        "t-test p": pval_str,
+        "post_event coef": coef_str,
+        "regression p": regp_str,
     })
 
 key_results_df = pd.DataFrame(key_rows)

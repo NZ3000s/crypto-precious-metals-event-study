@@ -158,6 +158,18 @@ def _load_etf_daily(path: str) -> pd.DataFrame:
     return out
 
 
+def _load_fred_dgs10(path: str) -> pd.DataFrame:
+    """
+    Load FRED DGS10 (10-year Treasury yield) daily. If file is missing, returns empty DataFrame.
+    """
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    df = pd.read_csv(path, parse_dates=["date"])
+    df = df.set_index("date").sort_index()
+    df = df.rename(columns={"DGS10": "dgs10"})
+    return df[["dgs10"]]
+
+
 def _load_controls_daily(path: str) -> pd.DataFrame:
     """
     Load DXY, VIX, TNX daily from yfinance CSV (similar layout as ETF file).
@@ -274,6 +286,9 @@ def _add_integration_features(panel: pd.DataFrame) -> pd.DataFrame:
 
     df["beta_60_gld_on_xau"] = rolling_beta(df["ret_gld"], df["ret_xau_binance"], 60)
     df["beta_60_slv_on_xag"] = rolling_beta(df["ret_slv"], df["ret_xag_binance"], 60)
+    # 20-day beta (available with shorter post-event window)
+    df["beta_20_gld_on_xau"] = rolling_beta(df["ret_gld"], df["ret_xau_binance"], 20)
+    df["beta_20_slv_on_xag"] = rolling_beta(df["ret_slv"], df["ret_xag_binance"], 20)
 
     # Volatility ratios (20-day realized vol)
     df["vol_ratio_gld_xau"] = (
@@ -367,10 +382,10 @@ def _add_funding_oi_features(panel: pd.DataFrame) -> pd.DataFrame:
 
 def _add_control_features(panel: pd.DataFrame) -> pd.DataFrame:
     """
-    Control variables (levels + changes) for DXY, VIX, TNX.
+    Control variables (levels + changes) for DXY, VIX, TNX, and FRED DGS10 if present.
     """
     df = panel.copy()
-    for col in ["dxy", "vix", "tnx"]:
+    for col in ["dxy", "vix", "tnx", "dgs10"]:
         if col in df.columns:
             df[f"{col}_ret"] = _compute_log_return(df[col])
     return df
@@ -383,6 +398,10 @@ def build_features() -> pd.DataFrame:
         os.path.join(RAW_DIR, "controls_dxy_vix_tnx_daily.csv")
     )
     base = etf.join(controls, how="left")
+    # FRED 10Y (DGS10) if available — use as additional control
+    fred_dgs10 = _load_fred_dgs10(os.path.join(RAW_DIR, "fred_dgs10_daily.csv"))
+    if not fred_dgs10.empty:
+        base = base.join(fred_dgs10, how="left")
 
     # Binance daily OHLCV
     xau_daily = _daily_from_binance_1m(
@@ -440,6 +459,9 @@ def build_features_hourly() -> pd.DataFrame:
         os.path.join(RAW_DIR, "controls_dxy_vix_tnx_daily.csv")
     )
     base = etf.join(controls, how="left")
+    fred_dgs10 = _load_fred_dgs10(os.path.join(RAW_DIR, "fred_dgs10_daily.csv"))
+    if not fred_dgs10.empty:
+        base = base.join(fred_dgs10, how="left")
     # Hourly index from start of first day to end of last day
     start = base.index.min().normalize()
     end = base.index.max().normalize() + pd.Timedelta(days=1)
@@ -483,6 +505,9 @@ def build_features_1m() -> pd.DataFrame:
         os.path.join(RAW_DIR, "controls_dxy_vix_tnx_daily.csv")
     )
     daily = etf.join(controls, how="left")
+    fred_dgs10 = _load_fred_dgs10(os.path.join(RAW_DIR, "fred_dgs10_daily.csv"))
+    if not fred_dgs10.empty:
+        daily = daily.join(fred_dgs10, how="left")
     daily.index = pd.to_datetime(daily.index)
     xau = xau.merge(daily, left_on="date", right_index=True, how="left")
     xau = xau.set_index("open_time").drop(columns=["date"], errors="ignore").sort_index()

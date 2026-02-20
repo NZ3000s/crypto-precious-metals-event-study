@@ -1,0 +1,189 @@
+---
+title: "Binance Gold & Silver Perpetuals and ETF Markets"
+subtitle: "Event study: impact on volatility and liquidity"
+author: "KSE Python course project"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    transition: slide
+    width: 1600
+    height: 900
+jupyter: python3
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## Setup: load data and define objects {.smaller}
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+plt.style.use("seaborn-v0_8-whitegrid")
+plt.rcParams["figure.dpi"] = 100
+COLORS = {"gld": "#B8860B", "slv": "#708090", "xau": "#DAA520", "xag": "#C0C0C0", "event": "#C41E3A", "pre": "#2E86AB", "post": "#E94F37"}
+
+df = pd.read_csv("data/processed/features_daily.csv", parse_dates=["Date"])
+df = df.set_index("Date").sort_index()
+event_date = pd.Timestamp("2026-01-05")
+core_cols = ["px_gld_close", "px_slv_close", "ret_gld", "ret_slv"]
+df_core = df.dropna(subset=core_cols).copy()
+df_core["post_event"] = (df_core.index >= event_date).astype(int)
+pre, post = df_core["post_event"] == 0, df_core["post_event"] == 1
+
+def ttest_pre_post(series, post_event):
+    pre_s = series[post_event == 0].dropna()
+    post_s = series[post_event == 1].dropna()
+    if len(pre_s) < 3 or len(post_s) < 3:
+        return np.nan, np.nan
+    t, p = stats.ttest_ind(post_s, pre_s, equal_var=False)
+    return t, p
+
+# Key metrics for summary table
+slide_metrics = [
+    ("vol_realized_20_ret_gld", "GLD 20d vol"),
+    ("vol_realized_20_ret_slv", "SLV 20d vol"),
+    ("vol_gld", "GLD vol (M)"),
+    ("vol_slv", "SLV vol (M)"),
+]
+slide_rows = []
+for col, label in slide_metrics:
+    if col not in df_core.columns:
+        continue
+    pre_m = df_core.loc[pre, col].mean()
+    post_m = df_core.loc[post, col].mean()
+    if "vol_gld" in col or "vol_slv" in col:
+        pre_m, post_m = pre_m / 1e6, post_m / 1e6
+    _, pval = ttest_pre_post(df_core[col], df_core["post_event"])
+    slide_rows.append({"Metric": label, "Pre": round(pre_m, 4), "Post": round(post_m, 4), "t-test p": round(pval, 4)})
+slide_table = pd.DataFrame(slide_rows) if slide_rows else None
+print("Data loaded. Pre/post n:", pre.sum(), post.sum())
+```
+
+# Research question and hypotheses
+
+## Research question
+
+Did the introduction of **Binance TRADFI gold and silver perpetual futures** (XAUUSDT, XAGUSDT) change:
+
+- **Volatility** of gold and silver ETFs (GLD, SLV)
+- **Liquidity** (volume, Amihud)
+- **Price integration** (correlation ETF–perpetual)
+
+**Event:** Launch date **2026-01-05**.
+
+## Hypotheses
+
+- **H1 (Volatility):** Realized volatility of GLD and SLV **increased** after the launch.
+- **H2 (Liquidity):** Trading volume **increased** and/or Amihud illiquidity **decreased** after the launch.
+- **Integration:** Described only *after* the event (no Binance data before launch) — rolling correlation GLD–XAU, SLV–XAG.
+
+## Event and data
+
+- **Event:** 2026-01-05 — Binance XAUUSDT TRADFI perpetual launch (XAGUSDT a few days later).
+- **Data:** Daily panel from `build_features.py`: ETF (Yahoo), Binance (API), controls (DXY, VIX, TNX, FRED DGS10).
+- **Sample:** Pre-event (before 2026-01-05) vs post-event; ~118 trading days, 87 variables.
+- **≥10k observations:** Satisfied by 1-minute panel (`features_1m.csv`).
+
+## Method
+
+- **Design:** Event study with **pre/post** comparison (no control group → no DiD).
+- **Tests:** (1) Welch t-tests (pre vs post means), (2) **OLS** with `post_event` + controls (DXY, VIX, 10Y).
+- **Coefficient of interest:** `post_event` — change in outcome after the launch, conditional on controls.
+- **SE:** HAC (Newey–West); outcomes winsorized at 5%/95%.
+
+# Key figures
+
+## Prices and cumulative returns
+
+```{python}
+fig, ax = plt.subplots(figsize=(10, 4))
+ret_cols = ["ret_gld", "ret_slv", "ret_xau_binance", "ret_xag_binance"]
+cum = (1 + df_core[ret_cols].fillna(0)).cumprod()
+cum = 100 * cum / cum.iloc[0]
+for col, (lab, c) in zip(ret_cols, [("GLD", COLORS["gld"]), ("SLV", COLORS["slv"]), ("XAUUSDT", COLORS["xau"]), ("XAGUSDT", COLORS["xag"])]):
+    ax.plot(cum.index, cum[col], label=lab, color=c, linewidth=1.5)
+ax.axvline(event_date, color=COLORS["event"], linestyle="--", linewidth=1.5, label="Event")
+ax.set_ylabel("Cumulative return (index = 100)")
+ax.set_title("Cumulative returns: ETFs vs Binance perpetuals")
+ax.legend(loc="upper left", ncol=2)
+plt.tight_layout()
+plt.show()
+```
+
+**Interpretation:** Post-event, all four series are available; paths show co-movement (integration).
+
+## Pre vs post: volatility and volume
+
+```{python}
+vol_data = []
+for col, label in [("vol_realized_20_ret_gld", "GLD 20d vol"), ("vol_realized_20_ret_slv", "SLV 20d vol")]:
+    if col in df_core.columns:
+        vol_data.append({"Metric": label, "Pre": df_core.loc[pre, col].mean(), "Post": df_core.loc[post, col].mean()})
+vol_df = pd.DataFrame(vol_data).set_index("Metric") if vol_data else None
+vol_vol_data = []
+for col, label in [("vol_gld", "GLD vol (M)"), ("vol_slv", "SLV vol (M)")]:
+    if col in df_core.columns:
+        vol_vol_data.append({"Metric": label, "Pre": df_core.loc[pre, col].mean()/1e6, "Post": df_core.loc[post, col].mean()/1e6})
+vol_vol_df = pd.DataFrame(vol_vol_data).set_index("Metric") if vol_vol_data else None
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+if vol_df is not None and len(vol_df):
+    vol_df.plot(kind="bar", ax=axes[0], color=[COLORS["pre"], COLORS["post"]], legend=True)
+    axes[0].set_title("Volatility"); axes[0].tick_params(axis="x", rotation=15)
+if vol_vol_df is not None and len(vol_vol_df):
+    vol_vol_df.plot(kind="bar", ax=axes[1], color=[COLORS["pre"], COLORS["post"]], legend=True)
+    axes[1].set_title("Volume (millions)"); axes[1].tick_params(axis="x", rotation=15)
+plt.suptitle("Pre vs post event", y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+**Interpretation:** Volatility and volume are higher post-event (consistent with H1 and H2).
+
+## Integration: rolling correlation (post-event)
+
+```{python}
+c_gld = df_core["corr_20_gld_xau"].dropna() if "corr_20_gld_xau" in df_core.columns else pd.Series(dtype=float)
+c_slv = df_core["corr_20_slv_xag"].dropna() if "corr_20_slv_xag" in df_core.columns else pd.Series(dtype=float)
+if not c_gld.empty or not c_slv.empty:
+    fig, ax = plt.subplots(figsize=(9, 3.5))
+    ax.axvline(event_date, color=COLORS["event"], linestyle="--", label="Event")
+    if not c_gld.empty: ax.plot(c_gld.index, c_gld.values, color=COLORS["gld"], label="GLD–XAU")
+    if not c_slv.empty: ax.plot(c_slv.index, c_slv.values, color=COLORS["slv"], label="SLV–XAG")
+    ax.set_ylabel("Rolling 20d correlation"); ax.set_title("ETF–Binance correlation (post-event)")
+    ax.legend(); ax.set_ylim(0, 1.02)
+    plt.tight_layout()
+    plt.show()
+```
+
+**Interpretation:** High correlation after launch → strong co-movement (descriptive integration).
+
+## Key results summary
+
+```{python}
+if slide_table is not None:
+    slide_table
+```
+
+- **Pre vs Post:** Volatility and volume increase after the event.
+- **t-test p:** Low p-values → difference in means is statistically significant.
+- **Regressions (see full report):** Positive significant `post_event` coefficient for GLD and SLV volatility (H1 supported); volume and Amihud discussed in key-results table.
+
+# Conclusions
+
+## Conclusions
+
+- **H1 (Volatility):** Supported — volatility of GLD and SLV increased after the Binance TRADFI launch (t-tests and OLS with controls).
+- **H2 (Liquidity):** Volume increased post-event; Amihud and regressions in full report.
+- **Integration:** No pre-period for Binance; we describe high post-event correlation GLD–XAU and SLV–XAG.
+- **Limitations:** Short post window; no control group (event study, not DiD). More data will improve precision.
+
+## Thank you
+
+- **Full analysis:** `analysis.qmd` / `analysis.html`
+- **Data & methods:** `DATA_DESCRIPTION.md`, `Literature/LITERATURE_METHODS.md`

@@ -105,7 +105,35 @@ The table below describes all main datasets in `data/raw/`, their sources, perio
 
 ---
 
-### 5. Потенційні наступні кроки / Next steps
+### 5. FRED: 10‑year Treasury yield (DGS10), daily
+
+- **Файл / File**:  
+  - `fred_dgs10_daily.csv`
+- **Джерело / Source**: FRED (Federal Reserve Economic Data) REST API  
+  - Series: **DGS10** (10-Year Treasury Constant Maturity Rate)
+- **Частота / Frequency**: тільки денні (і вищі). FRED **не надає** хвилинних або інтрадей даних — лише daily/weekly/monthly тощо.
+- **Використання**: у збірці панелей (`build_features.py`) DGS10 додається до контролів як `dgs10` та `dgs10_ret`; можна використовувати разом із або замість Yahoo `^TNX` для ставки 10Y.
+
+---
+
+### 6. Yahoo ETF 1m (останні 7 днів)
+
+- **Файл / File**: `etf_gld_slv_1m_last7d.csv`
+- **Джерело / Source**: Yahoo Finance via `yfinance`, `interval="1m"`, `period="7d"`.
+- **Обмеження**: Yahoo віддає 1m дані лише за останні ~7 днів (і не більше ~30 днів історії). Цей файл заповнюється при запуску `download_data.py`.
+- **Навіщо**: для періоду, де є і Binance 1m, і GLD/SLV 1m, можна порахувати **справжню хвилинну** кореляцію/зв’язок GLD–XAU та SLV–XAG (короткий інтрадей чек у звіті).
+
+---
+
+### 7. Поминутні дані / Minute data (обмеження)
+
+- **FRED**: хвилинних даних **немає** — тільки денні та нижчі частоти (тиждень, місяць).
+- **Yahoo Finance**: для ETF/акцій є інтрадей (1m), але лише за **останні 5–7 днів**; повної довгої 1m-історії для GLD/SLV не отримати.
+- **Висновок**: повна поминутна історія є лише для **Binance**. У `features_1m.csv` ETF та контролі — денні значення по днях. Для останніх 7 днів додатково є `etf_gld_slv_1m_last7d.csv` для інтрадей порівняння.
+
+---
+
+### 8. Потенційні наступні кроки / Next steps
 
 - **UA**:  
   - На основі цих сирих даних можна побудувати “аналітичний” датасет із:  
@@ -118,6 +146,6 @@ The table below describes all main datasets in `data/raw/`, their sources, perio
   - Based on these raw datasets you can build an “analytics” table with:  
     returns, volatility measures (rolling std, Parkinson, Garman–Klass),  
     rolling correlations/betas between Binance and ETFs, event indicators (`post_event`, `event_window_7`, `event_window_14`),  
-    liquidity proxies (volume, Amihud), and control variables (DXY, VIX, TNX).  
+    liquidity proxies (volume, Amihud), and control variables (DXY, VIX, TNX, FRED DGS10).  
   - This will easily satisfy the course requirement of 10,000+ observations and 50+ variables.
 
