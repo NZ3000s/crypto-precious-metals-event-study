@@ -92,7 +92,7 @@ Did the introduction of Binance TRADFI gold and silver perpetual futures change 
 <ul>
 <li><strong>Daily panel</strong> (<code>features_daily.csv</code>): 118 trading days, 87 variables. Used for the event study (pre/post comparison, regressions).</li>
 <li><strong>Hourly panel</strong> (<code>features_hourly.csv</code>): one row per hour over the same calendar span; Binance 1m aggregated to hourly, ETF/controls forward-filled from daily.</li>
-<li><strong>1-minute panel</strong> (<code>features_1m.csv</code>): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used to satisfy the course requirement of <strong>≥10,000 observations</strong>.</li>
+<li><strong>1-minute panel</strong> (<code>features_1m.csv</code>): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used for intraday analysis and high-frequency metrics.</li>
 </ul>
 <p>Raw data sources and variable definitions are in <code>DATA_DESCRIPTION.md</code>, <code>VARIABLES_DESCRIPTION.md</code>, and <code>DATA_ROW_COUNTS_AND_PERIODS.md</code>. A mapping of which variables are used where (and how to extend usage) is in <code>VARIABLE_USAGE.md</code>.</p>
 <div id="baac29d2" class="cell" data-execution_count="1">

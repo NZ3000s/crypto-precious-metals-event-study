@@ -1,0 +1,311 @@
+================================================================================
+PRESENTATION SCRIPT — Binance Gold & Silver Perpetuals and ETF Markets
+~12 minutes | 1 title slide + 12 content slides
+Use this file to build slides: each section = one slide with Title, Text,
+Required Tables & Charts, and Speaker Notes.
+================================================================================
+
+################################################################################
+SLIDE 0 — TITLE
+################################################################################
+
+Title:
+  Binance Gold & Silver Perpetuals and ETF Markets
+  Event study: impact on volatility, liquidity, and integration
+  KSE Python course project
+
+Text:
+  (No body text on title slide.)
+
+Required Tables & Charts:
+  None.
+
+Speaker Notes:
+  Introduce the project in one sentence: we ask whether the launch of Binance
+  TRADFI gold and silver perpetuals changed how the established ETF markets
+  (GLD, SLV) behave. Mention event date: 2026-01-05.
+
+
+################################################################################
+SLIDE 1 — Research question
+################################################################################
+
+Title:
+  Research question
+
+Text:
+  Did the introduction of Binance TRADFI gold and silver perpetual futures
+  (XAUUSDT, XAGUSDT) change:
+  • Volatility of gold and silver ETFs (GLD, SLV)
+  • Liquidity (volume, Amihud illiquidity)
+  • Price integration (correlation ETF–perpetual)
+  Event: launch date 2026-01-05.
+
+Required Tables & Charts:
+  None.
+
+Speaker Notes:
+  State the research question clearly. Integration we can only describe after
+  the event—no Binance data before launch. Keep it short; about one minute.
+
+
+################################################################################
+SLIDE 2 — Why this story matters
+################################################################################
+
+Title:
+  Why this story matters
+
+Text:
+  Gold and silver have long been traded via physical-backed ETFs (GLD, SLV)
+  on regulated exchanges.
+  In early 2026, Binance listed 24/7 perpetuals on the same underlyings. That
+  creates a second venue for the same economic assets.
+  We measure whether the incumbent ETF market changed—more volatile, more
+  liquid, or more tightly linked to the new venue. That matters for market
+  structure, arbitrageurs, and regulators.
+
+Required Tables & Charts:
+  None.
+
+Speaker Notes:
+  Tell the story: two venues, same asset. Our question is not only “did
+  volatility go up?” but “how did the structure of trading change?”
+
+
+################################################################################
+SLIDE 3 — Data: sources and periods
+################################################################################
+
+Title:
+  Data: sources and periods
+
+Text:
+  Sources:
+  • Binance API — XAUUSDT, XAGUSDT 1m klines, funding, open interest
+    (TRADIFI_PERPETUAL). From 2026-01-05 (XAU), 2026-01-07 (XAG).
+  • Yahoo Finance (yfinance) — GLD, SLV, IAU, GDX, SIL daily; DXY, VIX, TNX
+    daily; GLD/SLV 1m for last 7 days only.
+  • FRED — DGS10 daily (10Y Treasury), if API key set.
+  Periods: Daily panel ~118 trading days (pre + post). 1-minute panel 67k+
+  rows (Binance 1m from launch to latest).
+
+Required Tables & Charts:
+  Optional: small table or list of sources with columns [Source | Data | Period].
+
+Speaker Notes:
+  Be precise: Binance gives full 1m history; Yahoo 1m only last 7 days. Daily
+  data span the full sample for event study.
+
+
+################################################################################
+SLIDE 4 — How we use the data
+################################################################################
+
+Title:
+  How we use the data
+
+Text:
+  • Daily panel (features_daily.csv): 118 days × 87 variables. Used for event
+    study—pre/post means, t-tests, OLS with post_event and controls
+    (DXY, VIX, 10Y).
+  • 1-minute panel (features_1m.csv): one row per Binance XAUUSDT 1m candle,
+    daily ETF/controls merged by date. We also
+    use it for intraday return distribution and daily realized vol from 1m.
+  • Minute-level correlation: last 7 days where Yahoo 1m (GLD/SLV) overlaps
+    with Binance 1m—same-frequency correlation GLD–XAU, SLV–XAG.
+
+Required Tables & Charts:
+  Optional: simple diagram “Daily panel → regressions; 1m panel → intraday”.
+
+Speaker Notes:
+  Emphasize: daily for regressions and tests; 1m for scale and for one
+  high-frequency check. Simple and clear.
+
+
+################################################################################
+SLIDE 5 — Event and method
+################################################################################
+
+Title:
+  Event and method
+
+Text:
+  Design: Event study with pre/post comparison. No control group → we do not
+  use difference-in-differences.
+  Tests: (1) Welch t-tests (pre vs post); (2) OLS with outcome = volatility or
+  liquidity, regressor = post_event + controls (DXY, VIX, 10Y). HAC
+  (Newey–West) SE; winsorization 5%/95%.
+  Literature: Augustin et al. (2023), Management Science — impact of Bitcoin
+  futures on spot; they use DiD with treatment/control. We have a single
+  market before/after, so we use pre/post + OLS with controls.
+  See Literature/LITERATURE_METHODS.md.
+
+Required Tables & Charts:
+  None (or one bullet “Pre vs Post + OLS with controls”).
+
+Speaker Notes:
+  Mention that the Bitcoin futures paper uses DiD; we cannot because we have
+  no control group. Our design is standard event study with controls.
+
+
+################################################################################
+SLIDE 6 — Cumulative returns (ETFs vs Binance)
+################################################################################
+
+Title:
+  Cumulative returns: ETFs vs Binance perpetuals
+
+Text:
+  Post-event, all four series move together; high correlation supports
+  integration.
+
+Required Tables & Charts:
+  Chart: Cumulative returns, index = 100 (GLD, SLV, XAUUSDT, XAGUSDT).
+  Vertical line at 2026-01-05. Source: analysis.qmd section 3.1 (export
+  figure from Quarto or save matplotlib plot).
+
+Speaker Notes:
+  Show the chart and say: after the event we see all four lines; they
+  co-move. This is the first visual evidence of integration.
+
+
+################################################################################
+SLIDE 7 — Volatility and volume over time
+################################################################################
+
+Title:
+  Volatility and volume over time
+
+Text:
+  Realized 20d volatility (GLD, SLV) and ETF volume around the event. Basis
+  for H1 and H2. Chart titles show % growth (post vs pre), e.g. “GLD +X%, SLV +Y%”.
+
+Required Tables & Charts:
+  Chart: 20d realized volatility (GLD, SLV) and ETF volume over time; vertical
+  line at event. Titles include % change (post vs pre). Source: analysis.qmd 3.2.
+
+Speaker Notes:
+  Point to the post-event period and mention the percentages in the titles (e.g.
+  “SLV volatility and volume grew by X% and Y%, more than GLD”). Sets up the
+  regression results.
+
+
+################################################################################
+SLIDE 8 — Pre vs post: how much did each metric grow?
+################################################################################
+
+Title:
+  Pre vs post: how much did each metric grow?
+
+Text:
+  One chart shows % change (post vs pre) for all four metrics in the same units.
+  After the event, volatility and volume go up; silver (SLV) goes up more than
+  gold (GLD). We then test significance (table) and control for macro.
+
+Required Tables & Charts:
+  One horizontal bar chart: four bars = GLD 20d vol, SLV 20d vol, GLD volume,
+  SLV volume; each bar = % change (post vs pre). Gold/silver colors. Message:
+  “After the event everything grew; SLV grew more.” Table: [Metric | Pre | Post |
+  Pct | t-test p]. Source: analysis.qmd section 4.
+
+Speaker Notes:
+  “Horizontal bars = % change. All four positive = volatility and volume went up.
+  The two SLV bars are longer = silver reacted more. That’s what we test in
+  regressions; table has t-test and OLS.”
+
+
+################################################################################
+SLIDE 9 — Correlation matrix (key variables)
+################################################################################
+
+Title:
+  Correlation matrix (key variables)
+
+Text:
+  Pairwise correlations between returns (GLD, SLV, XAU, XAG), macro
+  controls (DXY, VIX, 10Y/TNX), and realized volatility. High ETF–Binance
+  correlation supports integration; macro vars are used as controls.
+
+Required Tables & Charts:
+  Chart: Correlation matrix heatmap (RdBu_r). Variables: GLD ret, SLV ret,
+  XAU ret, XAG ret, DXY ret, VIX ret, TNX/10Y ret, GLD 20d vol, SLV 20d vol.
+  Source: export_presentation_data.py from features_daily.
+
+Speaker Notes:
+  “Correlation matrix of our key variables. ETF–Binance return pairs are
+  highly correlated where we have data; we use DXY, VIX, rates as controls.”
+
+
+################################################################################
+SLIDE 10 — Integration: rolling correlation
+################################################################################
+
+Title:
+  Integration: do ETF and Binance perpetual move together?
+
+Text:
+  High post-event correlation → one price-discovery process across ETF and
+  perpetual. No pre-period for Binance; we only describe post-event.
+
+Required Tables & Charts:
+  Chart: Rolling 20d correlation GLD–XAU and SLV–XAG over time (post-event
+  only). Source: analysis.qmd section 3.2.
+
+Speaker Notes:
+  No pre-period for Binance; we only describe post-event. High correlation
+  means the two venues are linked—arbitrage and hedging.
+
+
+################################################################################
+SLIDE 11 — Regression results
+################################################################################
+
+Title:
+  Regression results
+
+Text:
+  Key result: Positive and significant coefficient on post_event in volatility
+  regressions (GLD and SLV) when we control for DXY, VIX, 10Y → H1 supported.
+  Volume higher post-event → H2 supported (direction).
+  Insight: Higher ETF volatility need not mean “chaos”—it can reflect more
+  hedging and informed trading across the two venues.
+
+Required Tables & Charts:
+  Table: Key results table (subset). Columns: Metric, Pre mean, Post mean,
+  t-test p, post coef, reg p. Key rows: GLD 20d vol, SLV 20d vol, GLD volume,
+  SLV volume, Corr GLD–XAU, Corr SLV–XAG. Source: analysis.qmd section 6.1.
+
+Speaker Notes:
+  Emphasize: we control for macro; the post_event effect is the causal
+  interpretation. Mention the non-obvious reading of volatility
+  (hedging/informed flow).
+
+
+################################################################################
+SLIDE 12 — Conclusions
+################################################################################
+
+Title:
+  Conclusions
+
+Text:
+  In short: The listing of Binance gold/silver perpetuals is associated with
+  higher ETF volatility and volume (H1, H2 supported with macro controls).
+  The two venues move together after the launch. New derivatives on a new
+  venue can shift incumbent markets (similar to Bitcoin futures, Augustin
+  et al.). Findings: vol and volume up; rolling correlation high. Who cares:
+  market-makers, arbitrageurs, regulators. Limitations: no pre-event Binance
+  data; no control group; short post window.
+
+Required Tables & Charts:
+  None.
+
+Speaker Notes:
+  One slide: what we found, why it matters, what we couldn’t do. Thank the
+  audience and open for questions.
+
+
+================================================================================
+END OF PRESENTATION SCRIPT
+================================================================================

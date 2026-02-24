@@ -6,6 +6,12 @@ format:
     df-print: paged
   pdf:
     documentclass: article
+    geometry:
+      - margin=2.2cm
+    include-in-header:
+      text: |
+        \usepackage{longtable}
+        \usepackage{booktabs}
 jupyter: python3
 execute:
   echo: false
@@ -18,6 +24,8 @@ execute:
 **Research question.**  
 Did the introduction of Binance TRADFI gold and silver perpetual futures change volatility, liquidity and price integration in the corresponding precious metal ETF markets (GLD and SLV)?
 
+**Why this story matters.** Gold and silver have long been traded via physical-backed ETFs (GLD, SLV) on regulated exchanges. In early 2026, Binance listed 24/7 tradable perpetuals on the same underlyings (XAUUSDT, XAGUSDT). That creates a second venue for exposure to the same economic assets. The natural question is whether the incumbent ETF markets *changed*—became more volatile, more liquid, or more tightly linked to the new venue. This report tells that story: we measure what happened in GLD and SLV *after* the launch and interpret the results in terms of market structure and implications for investors and regulators.
+
 **Main hypotheses (testable with pre/post data).**
 
 - **H1 (volatility)**: Realized volatility of gold and silver ETFs increased after the launch of Binance XAUUSDT and XAGUSDT TRADFI perpetual futures.
@@ -27,15 +35,32 @@ We do *not* formulate a formal hypothesis on “integration increased”, becaus
 
 **How we identify the impact on the market.** We use an **event study** with (i) pre/post comparison of means and t-tests, and (ii) **OLS regressions** where the outcome is volatility (or liquidity proxy) and the key regressor is a **post-event dummy** (`post_event` = 1 after the launch date), plus controls (DXY, VIX, 10Y yield changes). The coefficient on `post_event` is our estimate of the change in the outcome after the launch, conditional on controls. We do not have a control group (e.g. other assets without a new derivative), so we do not use difference-in-differences; the design is a single-market before/after event study with controls. See `Literature/LITERATURE_METHODS.md` for a comparison with the Bitcoin futures paper (Augustin et al., Management Science 2023), which uses DiD.
 
+### 1.1 Як ми вирішуємо це завдання
+
+- **Дані.** Збираємо щоденні ціни та дохідності ETF (GLD, SLV) і Binance perpetual (XAUUSDT, XAGUSDT), а також контролі (DXY, VIX, 10Y yield). З них будуємо панель по днях і метрики: реалізована волатильність (20d, 10d), Parkinson, GK, об’єм, Amihud, кореляція та бета ETF–Binance (після запуску).
+- **Подія.** Подія = дата запуску Binance TRADFI XAUUSDT/XAGUSDT (**2026-01-05**). До цієї дати даних Binance немає, тому інтеграцію (кореляція, бета) оцінюємо лише після події.
+- **Метод.** (1) Порівняння середніх до/після події та t-тести (Welch) для волатильності та ліквідності. (2) OLS-регресії: залежна змінна — волатильність або ліквідність, регресор — даммі `post_event` плюс контролі (DXY, VIX, 10Y). Коефіцієнт при `post_event` інтерпретуємо як ефект запуску при контролі макрофакторів. Використовуємо winsorization та HAC (Newey–West) стандартні помилки.
+- **Інтерпретація.** Позитивний і значимий коефіцієнт при `post_event` у регресії волатильності підтверджує H1; вищий об’єм і нижчий Amihud після події підтверджують H2. Інтеграцію (кореляція GLD–XAU, SLV–XAG) описуємо лише після події, без формального тесту гіпотези (немає пре-періоду для Binance).
+
 ## 2. Data and feature set
 
 We use three pre‑built datasets produced by `build_features.py`:
 
 - **Daily panel** (`features_daily.csv`): 118 trading days, 87 variables. Used for the event study (pre/post comparison, regressions).
 - **Hourly panel** (`features_hourly.csv`): one row per hour over the same calendar span; Binance 1m aggregated to hourly, ETF/controls forward-filled from daily.
-- **1-minute panel** (`features_1m.csv`): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used to satisfy the course requirement of **≥10,000 observations**.
+- **1-minute panel** (`features_1m.csv`): one row per Binance XAUUSDT 1m candle with daily ETF/controls merged by date. Used for intraday analysis and high-frequency metrics.
 
 Raw data sources and variable definitions are in `DATA_DESCRIPTION.md`, `VARIABLES_DESCRIPTION.md`, and `DATA_ROW_COUNTS_AND_PERIODS.md`. A mapping of which variables are used where (and how to extend usage) is in `VARIABLE_USAGE.md`.
+
+### 2.2 How we use 1-minute data
+
+We use minute-level data in **two ways**:
+
+1. **Panel `features_1m.csv` (Binance 1m + daily merge).**  
+   Built from Binance XAUUSDT 1m klines: each row is one minute candle; ETF and control variables are merged from the daily panel by **date** (same value for all minutes of that day). We use this panel to analyse intraday behaviour of the perpetual: 1m returns and their distribution, and daily realized volatility from 1m returns (see section 3.1.1).
+
+2. **Minute-level correlation (last 7 days).**  
+   Yahoo provides 1m data for GLD/SLV only for the **last ~7 days**. Where that overlaps with Binance 1m, we align both by datetime and compute **minute-level return correlation** (GLD–XAUUSDT and SLV–XAGUSDT) over the same 1m bars. That gives a same-frequency measure of short-run co-movement (section 3.2, “Minute-level correlation”). So: **1m data from Binance** feeds the large panel and intraday stats; **1m data from Yahoo (last 7d)** feeds the minute-level correlation with ETFs.
 
 ```{python}
 import pandas as pd
@@ -53,14 +78,14 @@ plt.rcParams["axes.labelsize"] = 10
 COLORS = {
     "gld": "#B8860B",      # dark goldenrod
     "slv": "#708090",       # slate gray
-    "xau": "#DAA520",      # goldenrod
-    "xag": "#C0C0C0",      # silver
+    "xau": "#C9A227",      # Binance gold (amber, distinct from GLD)
+    "xag": "#0D9488",      # Binance silver (teal, distinct from SLV grey)
     "event": "#C41E3A",    # crimson
     "pre": "#2E86AB",      # blue
     "post": "#E94F37",     # red-orange
 }
 
-# Row counts for all three panels (course requirement: >= 10,000 observations)
+# Row counts for all three panels
 proc_dir = "data/processed"
 for name, f in [("Daily", "features_daily.csv"), ("Hourly", "features_hourly.csv"), ("1-minute", "features_1m.csv")]:
     path = os.path.join(proc_dir, f)
@@ -77,8 +102,12 @@ df = df.set_index("Date").sort_index()
 df.shape
 ```
 
+First rows of the daily panel (first 8 of 87 columns shown so the table fits on the page in PDF).
+
 ```{python}
-df.head()
+# Show first 8 columns so the table fits on the page (PDF); full panel has 87 columns
+_n_cols = min(8, len(df.columns))
+df.head().iloc[:, : _n_cols]
 ```
 
 ### 2.1 Basic cleaning and event date
@@ -95,7 +124,9 @@ df_core = df.dropna(subset=core_cols).copy()
 
 df_core["post_event"] = (df_core.index >= event_date).astype(int)
 
-df_core.info()
+# Compact summary for PDF (avoids wide .info() overflow); full .info() in HTML
+print(f"Range: {df_core.index.min().date()} to {df_core.index.max().date()}, {len(df_core)} rows × {len(df_core.columns)} columns.")
+df_core.dtypes.head(12)
 ```
 
 ```{python}
@@ -131,23 +162,31 @@ plt.tight_layout()
 plt.show()
 ```
 
-**Cumulative returns** (normalized to 100 at the first date): a clear view of relative performance and whether paths diverge after the event.
+**Cumulative returns:** ETFs (GLD, SLV) from the first date, index 100 at start. Binance (XAUUSDT, XAGUSDT) only from the event date—we have no Binance prices before the launch; their index is 100 at the event.
 
 ```{python}
-# Cumulative gross returns -> index 100 at start
-ret_cols = ["ret_gld", "ret_slv", "ret_xau_binance", "ret_xag_binance"]
-labels = ["GLD", "SLV", "XAUUSDT", "XAGUSDT"]
-colors_list = [COLORS["gld"], COLORS["slv"], COLORS["xau"], COLORS["xag"]]
-cum = (1 + df_core[ret_cols].fillna(0)).cumprod()
-cum = 100 * cum / cum.iloc[0]
-
+# ETFs: full sample, index 100 at start. Binance: from event_date only (no data before).
 fig, ax = plt.subplots(figsize=(11, 4))
-for col, lab, c in zip(ret_cols, labels, colors_list):
-    ax.plot(cum.index, cum[col], label=lab, color=c, linewidth=1.8)
+for col, lab, c in [("ret_gld", "GLD", COLORS["gld"]), ("ret_slv", "SLV", COLORS["slv"])]:
+    if col not in df_core.columns:
+        continue
+    r = df_core[col].fillna(0)
+    cum = (1 + r).cumprod()
+    cum = 100 * cum / cum.iloc[0]
+    ax.plot(cum.index, cum, label=lab, color=c, linewidth=1.8)
+for col, lab, c in [("ret_xau_binance", "XAUUSDT", COLORS["xau"]), ("ret_xag_binance", "XAGUSDT", COLORS["xag"])]:
+    if col not in df_core.columns:
+        continue
+    post = df_core.loc[df_core.index >= event_date, col].dropna()
+    if post.empty:
+        continue
+    cum = (1 + post).cumprod()
+    cum = 100 * cum / cum.iloc[0]
+    ax.plot(cum.index, cum, label=lab, color=c, linewidth=1.8)
 ax.axvspan(event_date, df_core.index.max(), alpha=0.08, color=COLORS["event"], zorder=0)
 ax.axvline(event_date, color=COLORS["event"], linestyle="--", linewidth=1.5, label="Event")
 ax.set_ylabel("Cumulative return (index = 100)")
-ax.set_title("Cumulative returns: ETFs vs Binance perpetuals")
+ax.set_title("Cumulative returns: ETFs vs Binance perpetuals (Binance from launch only)")
 ax.legend(loc="upper left", ncol=2)
 plt.tight_layout()
 plt.show()
@@ -210,9 +249,96 @@ plt.tight_layout()
 plt.show()
 ```
 
+**Python analytics: interactive visualization (Plotly)** — as in the class examples (e.g. Debt vs Renew), we use Plotly for one interactive chart: hover over dates to see values.
+
+```{python}
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+    # ETFs: full sample. Binance: from event only (no data before launch).
+    cum_parts = []
+    for col, name in [("ret_gld", "GLD"), ("ret_slv", "SLV")]:
+        if col not in df_core.columns:
+            continue
+        r = df_core[col].fillna(0)
+        cum = (1 + r).cumprod()
+        cum = 100 * cum / cum.iloc[0]
+        cum_parts.append(cum.rename(name).reset_index().melt(id_vars="Date", var_name="Series", value_name="Index"))
+    for col, name in [("ret_xau_binance", "XAUUSDT"), ("ret_xag_binance", "XAGUSDT")]:
+        if col not in df_core.columns:
+            continue
+        post = df_core.loc[df_core.index >= event_date, col].dropna()
+        if post.empty:
+            continue
+        cum = (1 + post).cumprod()
+        cum = 100 * cum / cum.iloc[0]
+        cum_parts.append(cum.rename(name).reset_index().melt(id_vars="Date", var_name="Series", value_name="Index"))
+    cum_long = pd.concat(cum_parts, ignore_index=True) if cum_parts else pd.DataFrame()
+    if not cum_long.empty:
+        fig_px = px.line(cum_long, x="Date", y="Index", color="Series",
+                         title="Cumulative returns (index=100) — Binance from launch only",
+                         labels={"Index": "Cumulative return index"})
+        fig_px.add_vline(x=event_date, line_dash="dash", line_color=COLORS["event"])
+        fig_px.update_layout(height=400)
+        fig_px.show()
+except Exception as e:
+    print("Plotly not available:", e)
+```
+
+**Time-series diagnostics (statsmodels):** ACF of daily returns to show short-run dependence, as in the class time-series examples (e.g. AutoReg/VAR project).
+
+```{python}
+from statsmodels.graphics.tsaplots import plot_acf
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+ret_gld_clean = df_core["ret_gld"].dropna()
+ret_slv_clean = df_core["ret_slv"].dropna()
+plot_acf(ret_gld_clean, ax=axes[0], lags=min(30, len(ret_gld_clean)//2 - 1), alpha=0.05)
+axes[0].set_title("ACF: GLD daily returns")
+plot_acf(ret_slv_clean, ax=axes[1], lags=min(30, len(ret_slv_clean)//2 - 1), alpha=0.05)
+axes[1].set_title("ACF: SLV daily returns")
+plt.suptitle("Autocorrelation of returns (statsmodels)", fontsize=12, y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+A concise list of Python techniques used in this project (pandas, numpy, scipy, statsmodels, Plotly, etc.), aligned with the course References, is in `PYTHON_TECHNIQUES.md`.
+
 ```{python}
 returns_cols = ["ret_gld", "ret_slv", "ret_xau_binance", "ret_xag_binance"]
 df_core[returns_cols].describe().T[["mean", "std", "min", "max"]]
+```
+
+#### 3.1.2 Intraday analysis using the 1-minute panel (`features_1m`)
+
+We use the **1-minute panel** here (not only for the row count): we load `features_1m.csv`, take 1m returns of XAUUSDT (`ret_xau_binance`), and show **(a)** the distribution of 1m returns and **(b)** daily realized volatility computed from 1m returns (annualized). So the minute data directly feeds intraday volatility and return shape.
+
+```{python}
+path_1m = os.path.join("data", "processed", "features_1m.csv")
+if os.path.exists(path_1m):
+    df_1m = pd.read_csv(path_1m, parse_dates=["open_time"], index_col="open_time")
+    if "ret_xau_binance" in df_1m.columns:
+        ret_1m = df_1m["ret_xau_binance"].dropna()
+        ret_1m = ret_1m[np.isfinite(ret_1m)]
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        axes[0].hist(ret_1m, bins=80, color=COLORS["xau"], alpha=0.8, edgecolor="white", linewidth=0.3)
+        axes[0].set_xlabel("XAUUSDT 1m log return")
+        axes[0].set_ylabel("Count")
+        axes[0].set_title("Distribution of 1m returns (features_1m)")
+        # Daily realized vol from 1m (std of 1m returns per day, annualized)
+        df_1m_local = df_1m.copy()
+        df_1m_local["date"] = df_1m_local.index.date
+        daily_vol_1m = df_1m_local.groupby("date")["ret_xau_binance"].std() * np.sqrt(24 * 60) * 100  # ann. % approx
+        daily_vol_1m.plot(ax=axes[1], color=COLORS["xau"], linewidth=1.2)
+        axes[1].set_xlabel("Date")
+        axes[1].set_ylabel("Realized vol (1m, ann. % approx)")
+        axes[1].set_title("Daily realized volatility from 1m returns")
+        plt.suptitle("Use of 1-minute panel: returns and intraday volatility", fontsize=12, y=1.02)
+        plt.tight_layout()
+        plt.show()
+    else:
+        print("features_1m loaded but ret_xau_binance not found.")
+else:
+    print("features_1m.csv not found; run build_features.py after download_data.py.")
 ```
 
 ### 3.2 Volatility and liquidity over time
@@ -868,6 +994,14 @@ def fmt_val(x, col_name: str, is_volume: bool = False):
         return round(x, 4)
     return round(x, 6) if abs(x) < 1e-4 or abs(x) >= 1e4 else round(x, 4)
 
+def fmt_coef(x):
+    """Format regression coefficient for table (compact so table fits on page)."""
+    if np.isnan(x):
+        return "N/A"
+    if abs(x) >= 1e4 or (abs(x) < 1e-3 and x != 0):
+        return f"{x:.2e}"
+    return round(x, 4)
+
 key_rows = []
 for col, label, model_name in key_metrics:
     if col not in df_core.columns:
@@ -886,26 +1020,27 @@ for col, label, model_name in key_metrics:
 
     no_pre = col in no_pre_metrics
     is_vol = "volume" in label.lower() or "vol_gld" == col or "vol_slv" == col
-    pre_str = "N/A (no Binance pre)" if no_pre else (fmt_val(pre_mean, col, is_vol) if not np.isnan(pre_mean) else "N/A")
-    post_str = fmt_val(post_mean, col, is_vol) if not np.isnan(post_mean) else ("N/A (need longer window)" if no_pre else "N/A")
+    pre_str = "—" if no_pre else (fmt_val(pre_mean, col, is_vol) if not np.isnan(pre_mean) else "N/A")
+    post_str = fmt_val(post_mean, col, is_vol) if not np.isnan(post_mean) else ("—" if no_pre else "N/A")
     pval_str = "N/A" if no_pre else (round(pval, 4) if not np.isnan(pval) else "N/A")
-    coef_str = "N/A" if (no_pre and not model_name) else (round(coef_post, 6) if not np.isnan(coef_post) else "N/A")
-    regp_str = "N/A" if (no_pre and not model_name) else (round(pval_reg, 4) if not np.isnan(pval_reg) else "N/A")
+    coef_str = "N/A" if (no_pre and not model_name) else (fmt_coef(coef_post) if not np.isnan(coef_post) else "N/A")
+    regp_str = "N/A" if (no_pre and not model_name) else (round(pval_reg, 3) if not np.isnan(pval_reg) else "N/A")
 
     key_rows.append({
         "Metric": label,
         "Pre mean": pre_str,
         "Post mean": post_str,
         "t-test p": pval_str,
-        "post_event coef": coef_str,
-        "regression p": regp_str,
+        "post coef": coef_str,
+        "reg p": regp_str,
     })
 
 key_results_df = pd.DataFrame(key_rows)
+# Short column names and compact numbers so the table fits on the page (PDF)
 key_results_df
 ```
 
-**Comment.** This table brings everything together. Use "Pre mean" vs "Post mean" to see the direction of change; "t-test p" to see if the change is significant; and "post_event coef" with "regression p" (for GLD and SLV volatility) to see the effect of the event after controlling for macro factors. For volatility, a positive and significant post_event coef supports H1; for volume, higher post mean supports H2. Correlation columns (Corr GLD–XAU, Corr SLV–XAG) have no meaningful pre mean (Binance did not exist), so we use them only as descriptive post-event integration.
+**Comment.** This table brings everything together. Use "Pre mean" vs "Post mean" to see the direction of change; "t-test p" for significance; "post coef" = coefficient on post-event dummy, "reg p" = its p-value (for GLD/SLV volatility). A positive and significant post coef supports H1; higher post mean for volume supports H2. Corr GLD–XAU / SLV–XAG have no pre mean (Binance did not exist); "—" = not applicable.
 
 ### 6.2 Empirical results
 
@@ -922,7 +1057,7 @@ sentences = []
 if gld_vol_coef is not None:
     dir_gld = "increased" if gld_vol_coef > 0 else "decreased"
     sig_gld = "significant" if gld_vol_p is not None and gld_vol_p < alpha else "not significant"
-    sentences.append(f"**Volatility (H1):** After controlling for DXY, VIX and 10Y yield changes, the post-event coefficient in the GLD 20-day volatility regression is {gld_vol_coef:.5f} (p = {gld_vol_p:.3f}), so volatility {dir_gld} post launch and the effect is {sig_gld} at the 5% level.")
+    sentences.append(f"Volatility (H1): After controlling for DXY, VIX and 10Y yield changes, the post-event coefficient in the GLD 20-day volatility regression is {gld_vol_coef:.5f} (p = {gld_vol_p:.3f}), so volatility {dir_gld} post launch and the effect is {sig_gld} at the 5% level.")
 if slv_vol_coef is not None:
     dir_slv = "increased" if slv_vol_coef > 0 else "decreased"
     sig_slv = "significant" if slv_vol_p is not None and slv_vol_p < alpha else "not significant"
@@ -936,13 +1071,13 @@ if len(corr_gld) and len(corr_slv):
     post_corr_slv = corr_slv["mean"].iloc[0]
     pre_corr_gld = summary_pre_post[(summary_pre_post["metric"] == "corr_20_gld_xau") & (summary_pre_post["period"] == "pre")]["mean"].iloc[0] if len(summary_pre_post[(summary_pre_post["metric"] == "corr_20_gld_xau") & (summary_pre_post["period"] == "pre")]) else np.nan
     pre_corr_slv = summary_pre_post[(summary_pre_post["metric"] == "corr_20_slv_xag") & (summary_pre_post["period"] == "pre")]["mean"].iloc[0] if len(summary_pre_post[(summary_pre_post["metric"] == "corr_20_slv_xag") & (summary_pre_post["period"] == "pre")]) else np.nan
-    sentences.append(f"**Integration (descriptive only):** Average rolling correlation GLD–XAU is {post_corr_gld:.3f} post-event; SLV–XAG is {post_corr_slv:.3f} post-event. There is no pre-event correlation (Binance did not exist), so we do not test a pre/post change; we only describe the level of co-movement after the launch.")
+    sentences.append(f"Integration (descriptive only): Average rolling correlation GLD–XAU is {post_corr_gld:.3f} post-event; SLV–XAG is {post_corr_slv:.3f} post-event. There is no pre-event correlation (Binance did not exist), so we do not test a pre/post change; we only describe the level of co-movement after the launch.")
 
 # Liquidity (volume / Amihud if available)
 vol_gld_pre = summary_pre_post[(summary_pre_post["metric"] == "GLD volume") & (summary_pre_post["period"] == "pre")]["mean"].iloc[0] if len(summary_pre_post[(summary_pre_post["metric"] == "GLD volume") & (summary_pre_post["period"] == "pre")]) else np.nan
 vol_gld_post = summary_pre_post[(summary_pre_post["metric"] == "GLD volume") & (summary_pre_post["period"] == "post")]["mean"].iloc[0] if len(summary_pre_post[(summary_pre_post["metric"] == "GLD volume") & (summary_pre_post["period"] == "post")]) else np.nan
 if not np.isnan(vol_gld_pre) and not np.isnan(vol_gld_post):
-    sentences.append(f"**Liquidity (H2):** Average GLD volume is {vol_gld_post:.0f} post-event vs {vol_gld_pre:.0f} pre-event; SLV volume can be read from the pre/post table. Higher volume and lower Amihud post-event would indicate improved liquidity.")
+    sentences.append(f"Liquidity (H2): Average GLD volume is {vol_gld_post:.0f} post-event vs {vol_gld_pre:.0f} pre-event; SLV volume can be read from the pre/post table. Higher volume and lower Amihud post-event would indicate improved liquidity.")
 
 for s in sentences:
     print(s)
@@ -984,6 +1119,16 @@ print(f"  SLV volume: {vol_slv}.")
 print("  Check Amihud in the pre/post table; lower post = better liquidity.")
 ```
 
+### 6.3.1 Economic insights and storytelling
+
+**Market structure.** The launch added a *second venue* for gold and silver exposure: the established ETF market (exchange-traded, physical-backed) and the new perpetual market (crypto exchange, 24/7, margin-based). Our evidence suggests that the two did not operate in isolation after the launch: post-event rolling correlation between GLD and XAUUSDT (and SLV and XAGUSDT) is high. That implies *one price-discovery process* spanning both venues—arbitrageurs and hedgers likely keep the two in line. So the “story” is: the incumbent ETF market did not stay unchanged; it became part of a broader, two-venue system.
+
+**Non-obvious interpretation of volatility.** A rise in ETF volatility after the launch need not mean “noise” or “instability.” It can reflect *more hedging and informed trading*: when a new derivative appears, market participants may rebalance or hedge across venues, which can show up as higher realized volatility in the ETF. Similarly, if liquidity (volume, Amihud) improves, the new venue may have attracted marginal liquidity providers or reduced frictions for cross-venue arbitrage, which can benefit both venues. So the narrative is not only “volatility went up” but “the structure of trading in gold/silver changed.”
+
+**Who is affected.** *ETF market-makers* face different inventory risk if volatility and volume rise. *Arbitrageurs* benefit from high correlation (GLD–XAU, SLV–XAG) but need to account for funding and execution across venues. *Regulators* care because the same economic exposure is now traded on a regulated ETF market and on a crypto exchange—our results show that the two are linked, which is relevant for oversight and for debates on where price discovery happens.
+
+**Comparison to the Bitcoin futures narrative.** Studies of CME Bitcoin futures (e.g. Augustin et al.) often ask whether the introduction of derivatives *increased* spot volatility. We ask a similar question for *gold and silver ETFs* when a *crypto exchange* lists linked perpetuals. Finding a positive post-event effect on ETF volatility is consistent with a broader pattern: new derivatives on new venues can shift volatility and liquidity in the incumbent market. The story is therefore not gold-specific—it is about how incumbent markets react when a new, linked venue opens.
+
 ### 6.4 Limitations and extensions
 
 - **No pre-period for integration.** Binance XAUUSDT/XAGUSDT did not exist before the launch, so we have no Binance returns before the event. Rolling correlation (GLD–XAU, SLV–XAG) and beta can only be computed from the launch date onward. We cannot compare “integration before vs after” in the same way as for volatility or liquidity; we can only describe the level and evolution of integration post-launch.
@@ -993,5 +1138,7 @@ print("  Check Amihud in the pre/post table; lower post = better liquidity.")
 
 ### 6.5 Conclusion
 
-We asked whether the launch of Binance gold and silver perpetuals (XAUUSDT, XAGUSDT) changed volatility and liquidity in gold and silver ETFs (GLD, SLV). The regressions show a positive and significant coefficient on the post-event dummy for both GLD and SLV volatility when we control for DXY, VIX and 10Y yield changes: that supports **H1** (volatility increased after the launch). For **H2** (liquidity), we compare pre- and post-event volume and Amihud from the summary table. We do not test a formal hypothesis on integration (no pre-event Binance data); we only report post-event rolling correlation as descriptive evidence. In short: the evidence points to higher ETF volatility after the Binance TRADFI launch; liquidity and integration are discussed in the tables and section 6.3. Because the post-event window is still short, updating the analysis with more data is recommended.
+We asked whether the launch of Binance gold and silver perpetuals (XAUUSDT, XAGUSDT) changed volatility and liquidity in gold and silver ETFs (GLD, SLV). The regressions show a positive and significant coefficient on the post-event dummy for both GLD and SLV volatility when we control for DXY, VIX and 10Y yield changes: that supports **H1** (volatility increased after the launch). For **H2** (liquidity), we compare pre- and post-event volume and Amihud from the summary table. We do not test a formal hypothesis on integration (no pre-event Binance data); we only report post-event rolling correlation as descriptive evidence.
+
+**Takeaway story.** The incumbent ETF market (GLD, SLV) did not stay isolated after Binance listed linked perpetuals. Volatility increased; liquidity and integration (high GLD–XAU and SLV–XAG correlation) suggest that the two venues now form a single price-discovery system. That has implications for market-makers, arbitrageurs, and regulators. The post-event window is still short—updating the analysis with more data is recommended.
 

@@ -1,5 +1,18 @@
 ## Опис даних / Data description
 
+### Як оновити дані / How to update data
+
+Запускайте команди **окремо** (без коментарів у тому ж рядку — інакше аргументи зламаються):
+
+```bash
+python3 download_data.py --refresh
+python3 build_features.py
+```
+
+Перша команда видаляє старі CSV у `data/raw/` і завантажує їх знову; друга збирає `features_daily.csv`, `features_hourly.csv`, `features_1m.csv` у `data/processed/`. Без успішного `download_data.py` файл `etf_gld_iau_slv_gdx_sil_daily.csv` (та інші) не з’являться, і `build_features.py` видасть FileNotFoundError.
+
+---
+
 Нижче описано всі основні набори даних у `data/raw/`, їх джерела, періоди та основні змінні.  
 The table below describes all main datasets in `data/raw/`, their sources, periods and key variables.
 
@@ -147,5 +160,5 @@ The table below describes all main datasets in `data/raw/`, their sources, perio
     returns, volatility measures (rolling std, Parkinson, Garman–Klass),  
     rolling correlations/betas between Binance and ETFs, event indicators (`post_event`, `event_window_7`, `event_window_14`),  
     liquidity proxies (volume, Amihud), and control variables (DXY, VIX, TNX, FRED DGS10).  
-  - This will easily satisfy the course requirement of 10,000+ observations and 50+ variables.
+  - The 1m panel has tens of thousands of rows; the daily panel has 87 variables.
 

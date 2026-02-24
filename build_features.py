@@ -491,7 +491,7 @@ def build_features_1m() -> pd.DataFrame:
     """
     Build a 1-minute panel: one row per Binance XAUUSDT 1m candle, with ETF and
     control variables merged from daily (same value for all minutes of that day).
-    Use this to satisfy the course requirement of >= 10,000 observations.
+    Used for intraday analysis; has tens of thousands of rows.
     """
     xau = pd.read_csv(
         os.path.join(RAW_DIR, "binance_xauusdt_1m.csv"),
@@ -534,7 +534,7 @@ def main() -> None:
     one_m = build_features_1m()
     out_1m = os.path.join(PROC_DIR, "features_1m.csv")
     one_m.to_csv(out_1m, index=True)
-    print(f"Saved 1m to {out_1m} with shape {one_m.shape} (>=10,000 observations)")
+    print(f"Saved 1m to {out_1m} with shape {one_m.shape}")
 
 
 if __name__ == "__main__":

@@ -88,7 +88,7 @@ Did the introduction of **Binance TRADFI gold and silver perpetual futures** (XA
 - **Event:** 2026-01-05 — Binance XAUUSDT TRADFI perpetual launch (XAGUSDT a few days later).
 - **Data:** Daily panel from `build_features.py`: ETF (Yahoo), Binance (API), controls (DXY, VIX, TNX, FRED DGS10).
 - **Sample:** Pre-event (before 2026-01-05) vs post-event; ~118 trading days, 87 variables.
-- **≥10k observations:** Satisfied by 1-minute panel (`features_1m.csv`).
+- **1-minute panel** (`features_1m.csv`): 67k+ rows for intraday analysis.
 
 ## Method
 

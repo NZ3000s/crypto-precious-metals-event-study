@@ -1,7 +1,7 @@
 ## Перелік та ідея змінних / List and rationale of variables
 
 Нижче — плановий набір змінних, який буде побудовано в аналітичному датасеті (напр. `data/processed/panel_daily.csv`).  
-Together these features will comfortably exceed **50 variables**, satisfying the course requirement.
+Together these features give 87 variables in the daily panel.
 
 ---
 

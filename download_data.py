@@ -60,6 +60,7 @@ def binance_continuous_klines(
 
     all_rows: List[List[Any]] = []
     current = start_time_ms
+    batch_count = 0
 
     while current < end_time_ms:
         p = params.copy()
@@ -72,11 +73,13 @@ def binance_continuous_klines(
             break
         all_rows.extend(rows)
         last_open_time = rows[-1][0]
-        # If we did not move forward in time, break to avoid infinite loop
         if last_open_time <= current:
             break
         current = last_open_time + 1
-        # Small sleep to avoid hitting API rate limits too hard
+        batch_count += 1
+        # Progress every 5 batches (~7500 rows) so you see it's working
+        if batch_count % 5 == 0:
+            print(f"  ... {len(all_rows)} rows", flush=True)
         time.sleep(0.2)
 
     if not all_rows:
