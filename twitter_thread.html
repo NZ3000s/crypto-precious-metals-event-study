@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>When Binance Listed Gold & Silver Perpetuals, the ETF Market Didn't Sit Still</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      line-height: 1.6;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    header {
+      padding: 2rem 1.5rem 1.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    header h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    header .meta {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .tweet {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #eee;
+      transition: background 0.15s ease;
+    }
+    .tweet:hover {
+      background: #fafafa;
+    }
+    .tweet-num {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+    .tweet p {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .tweet p strong {
+      font-weight: 600;
+    }
+    .tweet-fig {
+      margin-top: 1rem;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f9f9f9;
+      border: 1px solid #eee;
+    }
+    .tweet-fig img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+    }
+    .tweet-fig figcaption {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      color: #666;
+      border-top: 1px solid #eee;
+    }
+    .blog-section {
+      padding: 1.5rem 1.5rem 2rem;
+      background: #f9f9f9;
+      border-top: 1px solid #eee;
+    }
+    .blog-section h2 {
+      font-size: 1.1rem;
+      margin: 0 0 0.75rem;
+      color: #333;
+    }
+    .blog-section .body {
+      font-size: 0.98rem;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    .hashtags {
+      font-size: 0.85rem;
+      color: #666;
+      word-break: break-word;
+    }
+    .hashtags a {
+      color: #1d9bf0;
+      text-decoration: none;
+    }
+    .hashtags a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <header>
+      <h1>When Binance Listed Gold & Silver Perpetuals, the ETF Market Didn't Sit Still</h1>
+      <p class="meta">My research thread — event study: Binance XAUUSDT/XAGUSDT vs GLD/SLV</p>
+    </header>
+
+    <article class="thread">
+
+      <div class="tweet">
+        <div class="tweet-num">Tweet 1 — Hook</div>
+        <p>When Binance listed gold and silver perpetuals (XAUUSDT, XAGUSDT), I asked: did the <strong>old</strong> market—the big gold/silver ETFs (GLD, SLV)—change? Short answer: yes. 🧵</p>
+        <figure class="tweet-fig">
+          <img src="presentation_figures/why_story_two_venues.png" alt="Before: one venue. After: two venues. Same asset.">
+          <figcaption>Before: one venue. After: two venues. Same asset.</figcaption>
+        </figure>
+      </div>
+
+      <div class="tweet">
+        <div class="tweet-num">Tweet 2 — Setup</div>
+        <p>Same stuff, two places to trade it: regulated ETFs (GLD, SLV) and now 24/7 perpetuals on a crypto exchange. I ran an event study around the launch date (Jan 5, 2026) and checked volatility, volume, and how tight the link is between the two.</p>
+        <figure class="tweet-fig">
+          <img src="presentation_figures/event_method_design.png" alt="Event study timeline and OLS with controls.">
+          <figcaption>Event timeline + we control for macro (DXY, VIX, 10Y).</figcaption>
+        </figure>
+      </div>
+
+      <div class="tweet">
+        <div class="tweet-num">Tweet 3 — Finding 1</div>
+        <p>After the launch, ETF volatility and trading volume went <strong>up</strong>—and I controlled for the dollar (DXY), VIX, and rates. So the move looks tied to the new listing, not just “markets were crazy that month.”</p>
+        <figure class="tweet-fig">
+          <img src="presentation_figures/pre_post_bars.png" alt="Pre vs post % change: volatility and volume.">
+          <figcaption>Pre vs post % change: volatility and volume; silver jumps more.</figcaption>
+        </figure>
+      </div>
+
+      <div class="tweet">
+        <div class="tweet-num">Tweet 4 — Finding 2</div>
+        <p>Silver (SLV) reacted harder than gold (GLD): bigger bump in volatility and volume. Same story, different intensity.</p>
+      </div>
+
+      <div class="tweet">
+        <div class="tweet-num">Tweet 5 — Finding 3</div>
+        <p>Here’s the fun part: after the launch, the ETF and the Binance perpetual move <strong>in lockstep</strong>. Rolling correlation sits near 0.9–1. So it’s not “crypto vs traditional”—it’s one price-discovery process across two venues.</p>
+        <figure class="tweet-fig">
+          <img src="presentation_figures/rolling_corr.png" alt="Rolling 20d correlation GLD–XAU, SLV–XAG.">
+          <figcaption>Rolling 20d correlation GLD–XAU, SLV–XAG; high and stable.</figcaption>
+        </figure>
+      </div>
+
+      <div class="tweet">
+        <div class="tweet-num">Tweet 6 — So what</div>
+        <p>Why care? Market-makers, arbitrageurs, and regulators: same exposure, two venues, one price. New derivatives on a new venue can shift how the incumbent market behaves—same idea as Bitcoin futures and spot.</p>
+        <figure class="tweet-fig">
+          <img src="presentation_figures/cumulative_returns.png" alt="Cumulative returns: ETFs and Binance move together.">
+          <figcaption>All four series move together after the event.</figcaption>
+        </figure>
+      </div>
+
+      <div class="tweet">
+        <div class="tweet-num">Tweet 7 — Takeaway</div>
+        <p>TL;DR: Binance listing gold/silver perpetuals didn’t leave the ETF market unchanged. Volatility and volume went up (I controlled for macro). The two venues are tightly linked. One market, two doors. 🏁</p>
+        <figure class="tweet-fig">
+          <img src="presentation_figures/vol_volume.png" alt="Volatility and volume over time.">
+          <figcaption>Volatility and volume over time with event line.</figcaption>
+        </figure>
+      </div>
+
+    </article>
+
+    <section class="blog-section">
+      <h2>Blog version (one short post)</h2>
+      <p class="body">In early 2026, Binance started listing perpetuals on gold and silver (XAUUSDT, XAGUSDT). That gave traders a second venue for the same exposure—alongside the big ETFs (GLD, SLV). I ran an event study and found that after the launch, ETF volatility and volume went up even after controlling for the dollar, VIX, and rates. Silver (SLV) reacted more than gold (GLD). And the two venues didn’t trade in isolation: rolling correlation between the ETF and the Binance perpetual is high (around 0.9–1), so they move in lockstep. Bottom line: new derivatives on a new venue can change how the old market behaves—one price-discovery process, two doors. Relevant for market-makers, arbitrageurs, and regulators.</p>
+      <p class="hashtags">#Gold #Silver #ETF #Crypto #EventStudy #MarketStructure #Binance #Research</p>
+    </section>
+
+  </div>
+
+</body>
+</html>

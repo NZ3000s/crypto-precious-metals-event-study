@@ -71,7 +71,41 @@
   </div>
 
   <div class="section">
-    <h1>3. Data: sources and periods</h1>
+    <h1>3. Literature review</h1>
+    <p><strong>We orient on the “reverse” setting:</strong> literature on how <strong>derivatives affect spot markets</strong>—e.g. Bitcoin futures vs spot. Our case: new perpetuals (Binance) vs incumbent ETFs (GLD, SLV).</p>
+    <table>
+      <thead>
+        <tr>
+          <th>What was studied</th>
+          <th>Methods</th>
+          <th>Results (key)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Augustin, Rubtsov &amp; Shin (2023)</strong>, Management Science: introduction of <strong>Bitcoin futures</strong> → impact on <strong>spot/cash</strong> markets (exchanges with vs without futures).</td>
+          <td><strong>DiD</strong> (treatment = BTC-USD pairs with futures; control = other pairs). Fixed effects (exchange pair, month, currency). Event-time dynamics. <strong>Outcomes:</strong> volatility, volume, Amihud, Roll, price synchronicity/integration. Winsorization; clustered SE.</td>
+          <td>Derivatives change spot: integration, liquidity, volatility.</td>
+        </tr>
+        <tr>
+          <td><strong>“The influence of ETFs on the price discovery of gold, silver and oil”</strong>, Journal of Economics and Finance (2013): how <strong>ETFs interact with spot and futures</strong> in commodity markets.</td>
+          <td><strong>Price discovery metrics</strong> (e.g. information share / VECM-based methods) to see which market (spot, futures, ETF) leads; time-series models on returns and spreads.</td>
+          <td>ETFs are part of price discovery: for gold/silver they share or sometimes lead price adjustment with futures/spot. Shows that adding a new trading venue can shift where prices are set.</td>
+        </tr>
+        <tr>
+          <td><strong>Corbet, Lucey, Peat &amp; Vigne (2018)</strong>, <em>Economics Letters</em> 172: <strong>"Bitcoin Futures—What Use Are They?"</strong> — role and usefulness of Bitcoin futures (hedging, volatility, price discovery) around their introduction.</td>
+          <td>Empirical analysis of futures vs spot (volatility, hedging effectiveness, lead-lag); short-horizon around CME/CBOE listing.</td>
+          <td>Futures have limited hedging use early on; volatility and spillover effects. Complements the “derivatives change spot” narrative we use from Augustin et al.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>What we take for our study:</strong> Event-study framing; same type of outcomes (volatility, volume/liquidity, integration); controls (DXY, VIX, 10Y) to isolate the event; winsorization; HAC (Newey–West) SE; pre/post comparison and OLS with <code>post_event</code>.</p>
+    <p><strong>What we cannot take:</strong> <strong>DiD</strong>—we have no control group (only GLD/SLV before/after). <strong>Pre-event integration</strong>—Binance did not exist before the launch, so we cannot test “integration increased”; we only describe post-event correlation/level.</p>
+    <div class="notes"><strong>Speaker notes:</strong> One slide: literature looked at Bitcoin futures → spot; we look at new perpetuals → incumbent ETFs. We borrow design ideas and outcome variables, but we use pre/post + OLS with controls, not DiD, and we have no pre-Binance integration.</div>
+  </div>
+
+  <div class="section">
+    <h1>4. Data: sources and periods</h1>
     <table>
       <thead>
         <tr>
@@ -112,7 +146,7 @@
   </div>
 
   <div class="section">
-    <h1>4. How we use the data</h1>
+    <h1>5. How we use the data</h1>
     <ul>
       <li><strong>Daily panel</strong> (features_daily.csv): 118 days × 87 variables. Used for event study—pre/post means, t-tests, OLS with <code>post_event</code> and controls (DXY, VIX, 10Y).</li>
       <li><strong>1-minute panel</strong> (features_1m.csv): one row per Binance XAUUSDT 1m candle, daily ETF/controls merged by date. We use it for intraday return distribution and daily realized vol from 1m.</li>
@@ -123,7 +157,7 @@
   </div>
 
   <div class="section">
-    <h1>5. Event and method</h1>
+    <h1>6. Event and method</h1>
     <img src="presentation_figures/event_method_design.png" alt="Event study design: timeline and OLS" class="chart" width="700" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
     <div class="placeholder" style="display:none;">Run <code>python3 export_presentation_data.py</code> to generate figures.</div>
     <p><strong>Design:</strong> Event study with pre/post comparison. No control group → we do <strong>not</strong> use difference-in-differences.</p>
@@ -134,7 +168,7 @@
   </div>
 
   <div class="section">
-    <h1>6. Cumulative returns (ETFs vs Binance)</h1>
+    <h1>7. Cumulative returns (ETFs vs Binance)</h1>
     <img src="presentation_figures/cumulative_returns.png" alt="Cumulative returns index 100" class="chart" width="900" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
     <div class="placeholder" style="display:none;">Run <code>python3 export_presentation_data.py</code> to generate figures.</div>
     <p>On the chart, <strong>higher line = higher cumulative return</strong>: silver (SLV, XAGUSDT) outperforms gold (GLD, XAUUSDT) in this sample. <strong>After the event</strong>, all four series move together—that co-movement is the first visual evidence of integration between ETF and Binance markets.</p>
@@ -142,7 +176,7 @@
   </div>
 
   <div class="section">
-    <h1>7. Volatility and volume over time</h1>
+    <h1>8. Volatility and volume over time</h1>
     <img src="presentation_figures/vol_volume.png" alt="Volatility and volume" class="chart" width="900" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
     <div class="placeholder" style="display:none;">Run <code>python3 export_presentation_data.py</code> to generate figures.</div>
     <p>Volatility and volume dynamics around the event—basis for H1 and H2. <strong>Silver (SLV) reacts more strongly:</strong> post-event, both realized and Parkinson volatility, and ETF volume, rise more for SLV than for GLD.</p>
@@ -150,7 +184,7 @@
   </div>
 
   <div class="section">
-    <h1>8. Pre vs post: how much did each metric grow?</h1>
+    <h1>9. Pre vs post: how much did each metric grow?</h1>
     <img src="presentation_figures/pre_post_bars.png" alt="Pre vs post % change" class="chart" width="900" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
     <div class="placeholder" style="display:none;">Run <code>python3 export_presentation_data.py</code> to generate figures.</div>
     <p><strong>One chart, one message:</strong> after the event, volatility and volume increase (positive %); <strong>silver (SLV) increases more than gold (GLD)</strong>. Same units (%) make the comparison clear. Below we test whether these changes are statistically significant (t-test) and then control for macro in regressions.</p>
@@ -160,7 +194,7 @@
   </div>
 
   <div class="section">
-    <h1>9. Correlation matrix (key variables)</h1>
+    <h1>10. Correlation matrix (key variables)</h1>
     <img src="presentation_figures/correlation_matrix.png" alt="Correlation matrix" class="chart" width="900" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
     <div class="placeholder" style="display:none;">Run <code>python3 export_presentation_data.py</code> to generate figures.</div>
     <p><strong>What it shows:</strong> Pairwise correlations between the main variables we use: ETF returns (GLD, SLV), Binance perpetual returns (XAU, XAG), macro controls (DXY, VIX, 10Y/TNX), and realized volatility (GLD 20d, SLV 20d). Red = positive, blue = negative. High correlation between GLD and XAU (and SLV and XAG) in the post-event overlap supports integration; macro variables help us control for common factors in regressions.</p>
@@ -168,7 +202,7 @@
   </div>
 
   <div class="section">
-    <h1>10. Integration: do ETF and Binance perpetual move together?</h1>
+    <h1>11. Integration: do ETF and Binance perpetual move together?</h1>
     <img src="presentation_figures/rolling_corr.png" alt="Rolling 20d correlation" class="chart" width="900" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
     <div class="placeholder" style="display:none;">Run <code>python3 export_presentation_data.py</code> to generate figures.</div>
     <p><strong>What the chart shows:</strong> Rolling 20‑day correlation between ETF returns and Binance perpetual returns (GLD–XAU, SLV–XAG). We have data only after the launch; the first point appears ≈20 trading days after the event (rolling window needs 20 days). <strong>Values near 0.9–1.0</strong> mean the two venues move in lockstep → one price-discovery process, arbitrage and hedging link them. We cannot test “integration increased” because we have no pre-event Binance data; we describe the post-event level.</p>
@@ -176,7 +210,7 @@
   </div>
 
   <div class="section">
-    <h1>11. Regression results</h1>
+    <h1>12. Regression results</h1>
     <p><strong>Key result:</strong> Positive and significant coefficient on <code>post_event</code> in volatility regressions (GLD and SLV) <strong>when we control for DXY, VIX, 10Y</strong> (from Yahoo and FRED) → <strong>H1 supported</strong>. So the rise in volatility is attributed to the listing, not to general market moves. Volume higher post-event → <strong>H2 supported</strong> (direction). The table includes <strong>Corr GLD–XAU</strong> and <strong>Corr SLV–XAG</strong>: post-event means only (Pre = —); that is our price-integration data.</p>
     <div id="key-results-container"></div>
     <p><strong>Insight:</strong> Higher ETF volatility need not mean “chaos”—it can reflect more hedging and informed trading across the two venues.</p>
@@ -184,7 +218,7 @@
   </div>
 
   <div class="section">
-    <h1>12. Conclusions</h1>
+    <h1>13. Conclusions</h1>
     <p><strong>In short:</strong> The listing of Binance gold/silver perpetuals is associated with higher ETF volatility and volume (H1, H2 supported when we control for macro). The two venues move together after the launch—integration is high where we can measure it. So new derivatives on a new venue can shift incumbent markets; the story is similar to Bitcoin futures (Augustin et al.).</p>
     <ul>
       <li><strong>Findings:</strong> Volatility and volume up post-event (t-tests and OLS with DXY, VIX, 10Y). Rolling correlation GLD–XAU, SLV–XAG high after launch.</li>

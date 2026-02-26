@@ -12,6 +12,12 @@ format:
       text: |
         \usepackage{longtable}
         \usepackage{booktabs}
+        \usepackage{etoolbox}
+        \AtBeginEnvironment{longtable}{\small}
+        \AtBeginEnvironment{tabular}{\small}
+        \setlength{\LTcapwidth}{\textwidth}
+        \setlength{\LTleft}{0pt}
+        \setlength{\LTright}{0pt}
 jupyter: python3
 execute:
   echo: false
@@ -35,12 +41,12 @@ We do *not* formulate a formal hypothesis on “integration increased”, becaus
 
 **How we identify the impact on the market.** We use an **event study** with (i) pre/post comparison of means and t-tests, and (ii) **OLS regressions** where the outcome is volatility (or liquidity proxy) and the key regressor is a **post-event dummy** (`post_event` = 1 after the launch date), plus controls (DXY, VIX, 10Y yield changes). The coefficient on `post_event` is our estimate of the change in the outcome after the launch, conditional on controls. We do not have a control group (e.g. other assets without a new derivative), so we do not use difference-in-differences; the design is a single-market before/after event study with controls. See `Literature/LITERATURE_METHODS.md` for a comparison with the Bitcoin futures paper (Augustin et al., Management Science 2023), which uses DiD.
 
-### 1.1 Як ми вирішуємо це завдання
+### 1.1 How we approach the task
 
-- **Дані.** Збираємо щоденні ціни та дохідності ETF (GLD, SLV) і Binance perpetual (XAUUSDT, XAGUSDT), а також контролі (DXY, VIX, 10Y yield). З них будуємо панель по днях і метрики: реалізована волатильність (20d, 10d), Parkinson, GK, об’єм, Amihud, кореляція та бета ETF–Binance (після запуску).
-- **Подія.** Подія = дата запуску Binance TRADFI XAUUSDT/XAGUSDT (**2026-01-05**). До цієї дати даних Binance немає, тому інтеграцію (кореляція, бета) оцінюємо лише після події.
-- **Метод.** (1) Порівняння середніх до/після події та t-тести (Welch) для волатильності та ліквідності. (2) OLS-регресії: залежна змінна — волатильність або ліквідність, регресор — даммі `post_event` плюс контролі (DXY, VIX, 10Y). Коефіцієнт при `post_event` інтерпретуємо як ефект запуску при контролі макрофакторів. Використовуємо winsorization та HAC (Newey–West) стандартні помилки.
-- **Інтерпретація.** Позитивний і значимий коефіцієнт при `post_event` у регресії волатильності підтверджує H1; вищий об’єм і нижчий Amihud після події підтверджують H2. Інтеграцію (кореляція GLD–XAU, SLV–XAG) описуємо лише після події, без формального тесту гіпотези (немає пре-періоду для Binance).
+- **Data.** We collect daily prices and returns for ETFs (GLD, SLV) and Binance perpetuals (XAUUSDT, XAGUSDT), plus controls (DXY, VIX, 10Y yield). From these we build a daily panel and metrics: realized volatility (20d, 10d), Parkinson, GK, volume, Amihud, and ETF-Binance correlation and beta (after the launch).
+- **Event.** The event is the launch date of Binance TRADFI XAUUSDT/XAGUSDT (**2026-01-05**). Before that date we have no Binance data, so we estimate integration (correlation, beta) only after the event.
+- **Method.** (1) Pre/post comparison of means and Welch t-tests for volatility and liquidity. (2) OLS regressions: outcome is volatility or liquidity, regressors include a `post_event` dummy plus controls (DXY, VIX, 10Y). The coefficient on `post_event` is the effect of the launch conditional on macro controls. We use winsorization and HAC (Newey-West) standard errors.
+- **Interpretation.** A positive and significant coefficient on `post_event` in the volatility regression supports H1; higher volume and lower Amihud after the event support H2. We describe integration (GLD-XAU, SLV-XAG correlation) only after the event, with no formal hypothesis test (no pre-period for Binance).
 
 ## 2. Data and feature set
 
@@ -85,8 +91,13 @@ COLORS = {
     "post": "#E94F37",     # red-orange
 }
 
+# Data paths: support both project layout and Colab (processed/ at root)
+proc_dir = "data/processed" if os.path.exists("data/processed") else "processed"
+raw_dir = "data/raw" if os.path.exists("data/raw") else "raw"
+if not os.path.exists(proc_dir):
+    raise FileNotFoundError(f"Processed data folder not found. Create {proc_dir} with features_daily.csv, features_hourly.csv, features_1m.csv")
+
 # Row counts for all three panels
-proc_dir = "data/processed"
 for name, f in [("Daily", "features_daily.csv"), ("Hourly", "features_hourly.csv"), ("1-minute", "features_1m.csv")]:
     path = os.path.join(proc_dir, f)
     if os.path.exists(path):
@@ -96,9 +107,16 @@ for name, f in [("Daily", "features_daily.csv"), ("Hourly", "features_hourly.csv
 
 ```{python}
 # Load daily panel for event study (main analysis)
-df = pd.read_csv("data/processed/features_daily.csv", parse_dates=["Date"])
+path_daily = os.path.join(proc_dir, "features_daily.csv")
+df = pd.read_csv(path_daily, parse_dates=["Date"])
 df = df.set_index("Date").sort_index()
 
+# Validate: required columns for the analysis
+required = ["px_gld_close", "px_slv_close", "ret_gld", "ret_slv"]
+missing = [c for c in required if c not in df.columns]
+if missing:
+    raise KeyError(f"Daily panel missing columns: {missing}. Check build_features.py output.")
+print(f"Range: {df.index.min().date()} to {df.index.max().date()}, {len(df)} rows × {len(df.columns)} columns.")
 df.shape
 ```
 
@@ -313,7 +331,7 @@ df_core[returns_cols].describe().T[["mean", "std", "min", "max"]]
 We use the **1-minute panel** here (not only for the row count): we load `features_1m.csv`, take 1m returns of XAUUSDT (`ret_xau_binance`), and show **(a)** the distribution of 1m returns and **(b)** daily realized volatility computed from 1m returns (annualized). So the minute data directly feeds intraday volatility and return shape.
 
 ```{python}
-path_1m = os.path.join("data", "processed", "features_1m.csv")
+path_1m = os.path.join(proc_dir, "features_1m.csv")
 if os.path.exists(path_1m):
     df_1m = pd.read_csv(path_1m, parse_dates=["open_time"], index_col="open_time")
     if "ret_xau_binance" in df_1m.columns:
@@ -424,7 +442,6 @@ For the most recent 7 days we have *minute-level* data for both ETFs (Yahoo) and
 
 ```{python}
 # Optional: minute-level GLD/SLV from Yahoo (last 7d) + Binance 1m overlap
-raw_dir = "data/raw"
 yahoo_1m_path = os.path.join(raw_dir, "etf_gld_slv_1m_last7d.csv")
 binance_xau_path = os.path.join(raw_dir, "binance_xauusdt_1m.csv")
 binance_xag_path = os.path.join(raw_dir, "binance_xagusdt_1m.csv")
